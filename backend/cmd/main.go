@@ -30,7 +30,7 @@ func main() {
 	defer db.Close()
 
 	dbPool := db.GetPool()
-	
+
 	// User
 	userRepo := intRepo.NewUserRepository(dbPool)
 	userService := intService.NewUserService(userRepo)
@@ -38,6 +38,10 @@ func main() {
 
 	// Auth (simplified without Keycloak)
 	authHandler := intHandler.NewAuthHandler(userService)
+
+	announcementRepo := intRepo.NewAnnouncementRepository(db.GetPool())
+	announcementService := intService.NewAnnouncementService(announcementRepo)
+	announcementHandler := intHandler.NewAnnouncementHandler(announcementService)
 
 	r := gin.Default()
 
@@ -53,9 +57,12 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 	})
-	
+
 	// Register routes
 	intRoutes.RegisterUserRoutes(r, userHandler, authHandler)
+
+	// Register routes
+	intRoutes.RegisterAnnouncementRoutes(r, announcementHandler)
 
 	if err := r.Run(":8000"); err != nil {
 		log.Fatalf("failed to start server: %v", err)
