@@ -1,0 +1,251 @@
+// src/data/jobsData.js
+export const jobsList = [
+  {
+    id: 1,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท ABC เทคโนโลยี จำกัด",
+    department: "ภาควิชาคอมพิวเตอร์",
+    applyDuration: "15 วัน",
+    postDate: "1 มกราคม 2568",
+    closeDate: "15 มกราคม 2568",
+    academicYear: 2568,
+    semester: 1,
+    title: "Software Developer",
+    description:
+      "บริษัท ABC เปิดรับนักศึกษาฝึกงานด้าน Software Developer เพื่อพัฒนาและทดสอบระบบ Web Application และ Mobile Application ",
+    images: [
+      "https://i.pinimg.com/1200x/8c/b1/bd/8cb1bd678179aa501de16405055641f6.jpg",
+      "https://i.pinimg.com/1200x/ff/da/a3/ffdaa32984e31961247c9e38667c957c.jpg",
+      "https://i.pinimg.com/736x/c8/8b/ed/c88bed5e699ac102cd063fdd9e6f4d6d.jpg",
+      "https://i.pinimg.com/736x/c8/8b/ed/c88bed5e699ac102cd063fdd9e6f4d6d.jpg",
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg"
+    ],
+  },
+  {
+    id: 2,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท XYZ Analytics",
+    department: "ภาควิชาสถิติ",
+    applyDuration: "20 วัน",
+    postDate: "5 กุมภาพันธ์ 2568",
+    closeDate: "25 กุมภาพันธ์ 2568",
+    academicYear: 2568,
+    semester: 1,
+    title: "Data Analyst",
+    description:
+      "เปิดรับนักศึกษาสหกิจศึกษาในตำแหน่ง Data Analyst เพื่อเรียนรู้การเก็บข้อมูล วิเคราะห์ และทำรายงานเชิงสถิติ รวมถึงสร้าง Dashboard สำหรับผู้บริหาร",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg"
+    ],
+  },
+  {
+    id: 3,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท Creative Studio",
+    department: "ภาควิชาจุลชีววิทยา",
+    applyDuration: "10 วัน",
+    postDate: "10 มีนาคม 2568",
+    closeDate: "20 มีนาคม 2568",
+    academicYear: 2568,
+    semester: 1,
+    title: "Graphic Designer",
+    description:
+      "รับนักศึกษาฝึกงานด้าน Graphic Design ช่วยออกแบบสื่อโฆษณาและสื่อดิจิทัล เช่น โปสเตอร์ แบนเนอร์ และสื่อ Social Media",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 4,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท Energy Solutions จำกัด",
+    department: "ภาควิชาฟิสิกส์",
+    applyDuration: "30 วัน",
+    postDate: "20 เมษายน 2568",
+    closeDate: "20 พฤษภาคม 2568",
+    academicYear: 2568,
+    semester: 3,
+    title: "Electrical Engineer",
+    description:
+      "เปิดรับนักศึกษาสหกิจศึกษาเพื่อเข้าร่วมโครงการด้านพลังงาน เรียนรู้ระบบควบคุมไฟฟ้าและการบำรุงรักษาเครื่องจักรอุตสาหกรรม",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 5,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท Green BioTech",
+    department: "ภาควิชาชีววิทยา",
+    applyDuration: "12 วัน",
+    postDate: "1 พฤษภาคม 2568",
+    closeDate: "12 พฤษภาคม 2568",
+    academicYear: 2568,
+    semester: 1,
+    title: "Research Assistant",
+    description:
+      "เข้าร่วมทีมวิจัยด้านชีววิทยาพืชและจุลินทรีย์เพื่อทดสอบการเติบโตของพืชในสภาวะทดลอง",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 6,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท Math Academy",
+    department: "ภาควิชาคณิตศาสตร์",
+    applyDuration: "18 วัน",
+    postDate: "10 มิถุนายน 2568",
+    closeDate: "28 มิถุนายน 2568",
+    academicYear: 2568,
+    semester: 2,
+    title: "ผู้ช่วยสอนวิชาคณิตศาสตร์",
+    description:
+      "ช่วยสอนและติวเสริมวิชาคณิตศาสตร์ระดับมหาวิทยาลัย พร้อมทั้งจัดทำแบบฝึกหัด",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 7,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท EnviroTech",
+    department: "ภาควิชาวิทยาศาสตร์สิ่งแวดล้อม",
+    applyDuration: "25 วัน",
+    postDate: "5 กรกฎาคม 2568",
+    closeDate: "30 กรกฎาคม 2568",
+    academicYear: 2568,
+    semester: 3,
+    title: "Environmental Consultant",
+    description:
+      "ร่วมทำงานด้านสิ่งแวดล้อม เช่น ตรวจสอบคุณภาพน้ำ อากาศ และจัดทำรายงานผลการวิจัย",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 8,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท Pharma Chem",
+    department: "ภาควิชาเคมี",
+    applyDuration: "14 วัน",
+    postDate: "1 สิงหาคม 2568",
+    closeDate: "14 สิงหาคม 2568",
+    academicYear: 2568,
+    semester: 1,
+    title: "Chemical Analyst",
+    description:
+      "เข้าร่วมงานห้องแล็บ วิเคราะห์สารเคมี ตรวจสอบคุณภาพวัตถุดิบ และเขียนรายงานผลการทดลอง",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 9,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท AI Innovation",
+    department: "ภาควิชาคอมพิวเตอร์",
+    applyDuration: "20 วัน",
+    postDate: "15 กันยายน 2568",
+    closeDate: "5 ตุลาคม 2568",
+    academicYear: 2568,
+    semester: 2,
+    title: "AI Engineer Intern",
+    description:
+      "ร่วมพัฒนาโมเดล AI และ Machine Learning สำหรับโครงการด้านการประมวลผลภาพและภาษาธรรมชาติ",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 10,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท BioLab Center",
+    department: "ภาควิชาจุลชีววิทยา",
+    applyDuration: "15 วัน",
+    postDate: "20 ตุลาคม 2568",
+    closeDate: "5 พฤศจิกายน 2568",
+    academicYear: 2568,
+    semester: 3,
+    title: "Microbiology Intern",
+    description:
+      "ฝึกงานในห้องแล็บจุลชีววิทยา เรียนรู้การเลี้ยงเชื้อและทดสอบคุณภาพอาหาร/ยา",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 11,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท Quantum Tech",
+    department: "ภาควิชาฟิสิกส์",
+    applyDuration: "21 วัน",
+    postDate: "1 พฤศจิกายน 2568",
+    closeDate: "21 พฤศจิกายน 2568",
+    academicYear: 2568,
+    semester: 2,
+    title: "Research Intern - Quantum Computing",
+    description:
+      "เข้าร่วมทีมวิจัยด้านควอนตัมคอมพิวติ้ง ช่วยทำ Simulation และพัฒนาอัลกอริทึมต้นแบบ",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 12,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท AgriFood Research",
+    department: "ภาควิชาวิทยาศาสตร์สิ่งแวดล้อม",
+    applyDuration: "17 วัน",
+    postDate: "10 ธันวาคม 2568",
+    closeDate: "27 ธันวาคม 2568",
+    academicYear: 2568,
+    semester: 1,
+    title: "Food Safety Analyst",
+    description:
+      "ตรวจสอบคุณภาพอาหารและความปลอดภัยทางอาหาร ทำการทดสอบสารตกค้างและรายงานผล",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 13,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท BigData Solutions",
+    department: "ภาควิชาสถิติ",
+    applyDuration: "28 วัน",
+    postDate: "15 ธันวาคม 2568",
+    closeDate: "12 มกราคม 2569",
+    academicYear: 2568,
+    semester: 2,
+    title: "Internship Data Scientist",
+    description:
+      "ฝึกงานด้าน Data Science เรียนรู้การทำ Data Cleaning, Data Mining และการสร้าง Machine Learning Model",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+  {
+    id: 14,
+    logo: "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    company: "บริษัท Future Robotics",
+    department: "ภาควิชาคอมพิวเตอร์",
+    applyDuration: "22 วัน",
+    postDate: "20 ธันวาคม 2568",
+    closeDate: "10 มกราคม 2569",
+    academicYear: 2568,
+    semester: 3,
+    title: "Robotics Developer Intern",
+    description:
+      "เข้าร่วมโครงการวิจัยและพัฒนา Robotics เพื่อสร้างระบบควบคุมแขนกลอัตโนมัติ",
+    images: [
+      "https://i.pinimg.com/736x/c9/a8/bb/c9a8bbf40e4ea04310ff4cc2b94e9f95.jpg",
+    ],
+  },
+];
+
+export default jobsList;
