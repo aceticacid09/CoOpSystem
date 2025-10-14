@@ -17,11 +17,11 @@ services:
     depends_on:
       - db
     volumes:
-      - ./backend/uploads/public_docs:/app/uploads/public_docs
-      - ./backend/uploads/documents:/app/uploads/documents
-      - ./backend/uploads/news:/app/uploads/news
-      - ./backend/uploads/profile:/app/uploads/profile
-      - ./backend/uploads/student_doc:/app/uploads/student_doc
+      - ./backend/uploads/public_docs:/app/uploads/public_docs      # public documents folder 
+      - ./backend/uploads/documents:/app/uploads/documents          # attachment documents folder
+      - ./backend/uploads/news:/app/uploads/news                    # news uploads folder
+      - ./backend/uploads/profile:/app/uploads/profile              # profile image folder
+      - ./backend/uploads/student_docs:/app/uploads/student_docs    # student documents folder
 
   db:
     build:
