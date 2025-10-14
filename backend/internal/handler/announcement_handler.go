@@ -211,6 +211,41 @@ func (h *AnnouncementHandler) AddFilesToAnnouncement(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Files added successfully"})
 }
 
+// DeleteFileFromAnnouncement deletes a specific file from an announcement
+// @Summary Delete file from announcement
+// @Tags announcements
+// @Param file_id path int true "File ID"
+// @Success 200 {object} map[string]string
+// @Router /api/v1/announcements/files/{file_id} [delete]
+func (h *AnnouncementHandler) DeleteFileFromAnnouncement(c *gin.Context) {
+    fileIDStr := c.Param("file_id")
+    fileID, err := strconv.Atoi(fileIDStr)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file ID"})
+        return
+    }
+
+    // TODO: Check if the authenticated teacher owns the announcement containing this file
+    // teacherID := c.GetInt("user_id") // from JWT
+    // announcementID, err := h.announcementService.GetAnnouncementIDByFileID(c, fileID)
+    // if err != nil {
+    //     c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+    //     return
+    // }
+    // announcement, _ := h.announcementService.GetAnnouncementByID(c, announcementID)
+    // if announcement.TeacherID != nil && *announcement.TeacherID != teacherID {
+    //     c.JSON(http.StatusForbidden, gin.H{"error": "You can only delete files from your own announcements"})
+    //     return
+    // }
+
+    if err := h.announcementService.DeleteFileFromAnnouncement(c.Request.Context(), fileID); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
+}
+
 // SearchAnnouncements searches announcements by keyword
 // @Summary Search announcements
 // @Tags announcements

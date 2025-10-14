@@ -59,9 +59,7 @@ func (s *announcementService) CreateAnnouncement(ctx context.Context, req intMod
 
     // Validate required fields
     if req.Title == "" {
-        return intModels.AnnouncementWithDetails{}, fmt.
-
-Errorf("title is required")
+        return intModels.AnnouncementWithDetails{}, fmt.Errorf("title is required")
     }
 
     var attachmentID *int
@@ -104,7 +102,6 @@ Errorf("title is required")
     }
 
     log.Printf("Announcement created successfully with ID: %d", postID)
-
     // Return the created announcement with details
     return s.repo.GetAnnouncementByID(ctx, postID)
 }
@@ -127,9 +124,7 @@ func (s *announcementService) UpdateAnnouncement(ctx context.Context, id int, re
     }
 
     if req.Title != nil {
-        announcement.Title = *
-
-req.Title
+        announcement.Title = *req.Title
     }
     if req.Description != nil {
         announcement.Description = req.Description
@@ -149,6 +144,24 @@ req.Title
 
 // DeleteAnnouncement deletes an announcement
 func (s *announcementService) DeleteAnnouncement(ctx context.Context, id int) error {
+    // Get announcement to find associated files
+    announcement, err := s.repo.GetAnnouncementByID(ctx, id)
+    if err != nil {
+        return fmt.Errorf("announcement not found: %w", err)
+    }
+
+    // Delete physical files if they exist
+    if announcement.AttachmentID != nil {
+        files, err := s.repo.GetAttachmentFiles(ctx, *announcement.AttachmentID)
+        if err == nil {
+            for _, file := range files {
+                if err := os.Remove(file.StoragePath); err != nil {
+                    log.Printf("Failed to delete file %s: %v", file.StoragePath, err)
+                }
+            }
+        }
+    }
+
     return s.repo.DeleteAnnouncement(ctx, id)
 }
 
@@ -196,6 +209,29 @@ func (s *announcementService) AddFilesToAnnouncement(ctx context.Context, announ
     return nil
 }
 
+// DeleteFileFromAnnouncement deletes a specific file from an announcement
+func (s *announcementService) DeleteFileFromAnnouncement(ctx context.Context, fileID int) error {
+    // Get file details
+    file, err := s.repo.GetFileByID(ctx, fileID)
+    if err != nil {
+        return fmt.Errorf("file not found: %w", err)
+    }
+
+    // Delete file from database
+    if err := s.repo.DeleteFile(ctx, fileID); err != nil {
+        return fmt.Errorf("failed to delete file from database: %w", err)
+    }
+
+    // Delete physical file
+    if err := os.Remove(file.StoragePath); err != nil {
+        log.Printf("Warning: Failed to delete physical file %s: %v", file.StoragePath, err)
+        // Don't return error as database deletion was successful
+    }
+
+    log.Printf("File deleted successfully: %s (ID: %d)", file.FileName, fileID)
+    return nil
+}
+
 // SearchAnnouncements searches announcements by keyword
 func (s *announcementService) SearchAnnouncements(ctx context.Context, keyword string, page, pageSize int) (intModels.AnnouncementListResponse, error) {
     if page < 1 {
@@ -223,7 +259,7 @@ func (s *announcementService) SearchAnnouncements(ctx context.Context, keyword s
 }
 
 // uploadFile is a helper function to upload a file
-func (s *announcementService) uploadFile(ctx context.Context, attachmentID int, fileHeader *multipart.FileHeader) error {
+func (s *announcementService) uploadFile(ctx context.Context, attachmentID int, fileHeader *multipart.FileHeader) error{
     // Open uploaded file
     file, err := fileHeader.Open()
     if err != nil {

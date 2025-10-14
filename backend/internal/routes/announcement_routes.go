@@ -1,29 +1,31 @@
 package routes
 
 import (
-    "coop/internal/handler"
+	"coop/internal/handler"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 func RegisterAnnouncementRoutes(r *gin.Engine, announcementHandler *handler.AnnouncementHandler) {
-    // Serve static files for news attachments
-    r.Static("/uploads/news", "/app/uploads/news")
+	// Serve static files for news attachments
+	r.Static("/uploads/news", "/app/uploads/news")
 
-    v1 := r.Group("/api/v1")
-    {
-        announcements := v1.Group("/announcements")
-        {
-            // Public routes
-            announcements.GET("", announcementHandler.GetAllAnnouncements)
-            announcements.GET("/search", announcementHandler.SearchAnnouncements)
-            announcements.GET("/:id", announcementHandler.GetAnnouncementByID)
+	v1 := r.Group("/api/v1")
+	{
+		announcements := v1.Group("/announcements")
+		{
+			// Public routes
+			announcements.GET("", announcementHandler.GetAllAnnouncements)
+			announcements.GET("/search", announcementHandler.SearchAnnouncements)
+			announcements.GET("/:id", announcementHandler.GetAnnouncementByID)
 
-            //todo: Protected routes (add authentication middleware)
-            announcements.POST("", announcementHandler.CreateAnnouncement)
-            announcements.PUT("/:id", announcementHandler.UpdateAnnouncement)
-            announcements.DELETE("/:id", announcementHandler.DeleteAnnouncement)
-            announcements.POST("/:id/files", announcementHandler.AddFilesToAnnouncement)
-        }
-    }
+			// Protected routes - only teachers can create/update/delete
+			// TODO: Add authentication middleware
+			announcements.POST("", announcementHandler.CreateAnnouncement)
+			announcements.PUT("/:id", announcementHandler.UpdateAnnouncement)
+			announcements.DELETE("/:id", announcementHandler.DeleteAnnouncement)
+			announcements.POST("/:id/files", announcementHandler.AddFilesToAnnouncement)
+			announcements.DELETE("/files/:file_id", announcementHandler.DeleteFileFromAnnouncement)
+		}
+	}
 }

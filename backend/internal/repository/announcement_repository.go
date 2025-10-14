@@ -216,15 +216,25 @@ func (r *announcementRepository) AddFileToAttachment(ctx context.Context, attach
 		return 0, fmt.Errorf("failed to create file: %w", err)
 	}
 
-	// Update attachment with file_id and increment file_count
+	// Link file to attachment via junction table and increment file_count
 	_, err = r.db.Exec(ctx, `
-        UPDATE Attachment
-        SET file_id = $1, file_count = file_count + 1
-        WHERE attachment_id = $2
-    `, fileID, attachmentID)
+        INSERT INTO Attachment_File (attachment_id, file_id)
+        VALUES ($1, $2)
+    `, attachmentID, fileID)
 
 	if err != nil {
-		return 0, fmt.Errorf("failed to update attachment: %w", err)
+		return 0, fmt.Errorf("failed to link file to attachment: %w", err)
+	}
+
+	// Update file_count in Attachment table
+	_, err = r.db.Exec(ctx, `
+        UPDATE Attachment
+        SET file_count = file_count + 1
+        WHERE attachment_id = $1
+    `, attachmentID)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to update attachment file count: %w", err)
 	}
 
 	return fileID, nil
@@ -287,10 +297,106 @@ func (r *announcementRepository) DeleteAttachment(ctx context.Context, attachmen
 		if err != nil {
 			return fmt.Errorf("failed to delete file: %w", err)
 		}
-
 	}
 
 	return nil
+}
+
+// GetFileByID retrieves a file by its ID
+func (r *announcementRepository) GetFileByID(ctx context.Context, fileID int) (models.AttachmentDetail, error) {
+	var file models.AttachmentDetail
+	err := r.db.QueryRow(ctx, `
+        SELECT file_id, file_name, file_type, storage_path, uploaded_at
+        FROM File
+        WHERE file_id = $1
+    `, fileID).Scan(
+		&file.FileID,
+		&file.FileName,
+		&file.FileType,
+		&file.StoragePath,
+		&file.UploadedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return file, fmt.Errorf("file not found")
+		}
+		return file, fmt.Errorf("failed to get file: %w", err)
+	}
+
+	return file, nil
+}
+
+// DeleteFile deletes a specific file and updates the attachment
+func (r *announcementRepository) DeleteFile(ctx context.Context, fileID int) error {
+	// Start a transaction
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Get attachment_id that contains this file
+	var attachmentID *int
+	err = tx.QueryRow(ctx, `
+        SELECT attachment_id FROM Attachment WHERE file_id = $1
+    `, fileID).Scan(&attachmentID)
+
+	if err != nil && err != pgx.ErrNoRows {
+		return fmt.Errorf("failed to get attachment: %w", err)
+	}
+
+	// Delete the file
+	result, err := tx.Exec(ctx, `DELETE FROM File WHERE file_id = $1`, fileID)
+	if err != nil {
+		return fmt.Errorf("failed to delete file: %w", err)
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("file not found")
+	}
+
+	// Update attachment: decrement file_count and set file_id to NULL if this was the only file
+	if attachmentID != nil {
+		_, err = tx.Exec(ctx, `
+            UPDATE Attachment
+            SET file_count = file_count - 1,
+                file_id = CASE WHEN file_count <= 1 THEN NULL ELSE file_id END
+            WHERE attachment_id = $1
+        `, *attachmentID)
+
+		if err != nil {
+			return fmt.Errorf("failed to update attachment: %w", err)
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// GetAnnouncementIDByFileID retrieves the announcement ID that contains a specific file
+func (r *announcementRepository) GetAnnouncementIDByFileID(ctx context.Context, fileID int) (int, error) {
+	var announcementID int
+	err := r.db.QueryRow(ctx, `
+        SELECT an.post_id
+        FROM Announ_News an
+        INNER JOIN Attachment a ON an.attachment_id = a.attachment_id
+        WHERE a.file_id = $1
+    `, fileID).Scan(&announcementID)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return 0, fmt.Errorf("announcement not found for this file")
+		}
+		return 0, fmt.Errorf("failed to get announcement ID: %w", err)
+	}
+
+	return announcementID, nil
 }
 
 // SearchAnnouncements searches announcements by keyword
@@ -323,7 +429,6 @@ func (r *announcementRepository) SearchAnnouncements(ctx context.Context, keywor
 
 	var announcements []models.AnnouncementWithDetails
 	for rows.Next() {
-
 		var a models.AnnouncementWithDetails
 		err := rows.Scan(
 			&a.PostID,
