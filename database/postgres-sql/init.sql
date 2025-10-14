@@ -272,8 +272,8 @@ INSERT INTO StudentDoc (student_id, doc_type, attachment_id) VALUES
   
 -- เพิ่มข้อมูลตัวอย่าง PublicDoc  
 INSERT INTO PublicDoc (title, file_path, teacher_id) VALUES  
-('เทคนิคการสัมภาษณ์งาน', '/uploads/public_docs/interview_tips.pdf', 1),  
-('แนวทางการเขียน Resume', '/uploads/public_docs/resume_guide.pdf', 2);  
+('เทคนิคการสัมภาษณ์งาน', '/app/uploads/public_docs/interview_tips.pdf', 1),  
+('แนวทางการเขียน Resume', '/app/uploads/public_docs/resume_guide.pdf', 2);  
   
 -- เพิ่มข้อมูลตัวอย่าง Evaluator  
 INSERT INTO Evaluator (evaluator_type) VALUES  

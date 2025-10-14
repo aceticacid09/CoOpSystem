@@ -11,7 +11,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd
 
 # Create UploadPic/ProfilePic and UploadPic/UserUpload directories
-RUN mkdir -p /app/uploads/public_docs /app/uploads/documents /app/uploads/news /app/uploads/profile /app/uploads/student_docs && rm -rf /app/uploads/public_docs/* /app/uploads/documents/* /app/uploads/news/* /app/uploads/profile/* /app/uploads/student_docs/*
+RUN mkdir -p /app/uploads/public_docs /app/uploads/documents /app/uploads/news /app/uploads/profile /app/uploads/student_docs
 
 # Run Stage
 FROM alpine:latest  

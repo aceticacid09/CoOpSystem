@@ -1,70 +1,75 @@
 package main
 
 import (
-	"log"
-	"net/http"
+    "log"
+    "net/http"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
 
-	"coop/config"
-	"coop/database"
+    "coop/config"
+    "coop/database"
 
-	intHandler "coop/internal/handler"
-	intRepo "coop/internal/repository"
-	intRoutes "coop/internal/routes"
-	intService "coop/internal/service"
+    intHandler "coop/internal/handler"
+    intRepo "coop/internal/repository"
+    intRoutes "coop/internal/routes"
+    intService "coop/internal/service"
 )
 
 func main() {
-	// โหลด configuration
-	cfg, err := config.New()
-	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
-	}
+    // โหลด configuration
+    cfg, err := config.New()
+    if err != nil {
+        log.Fatalf("failed to load config: %v", err)
+    }
 
-	db, err := database.NewPostgresDB(cfg)
-	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
-	}
-	defer db.Close()
+    db, err := database.NewPostgresDB(cfg)
+    if err != nil {
+        log.Fatalf("failed to connect to database: %v", err)
+    }
+    defer db.Close()
 
-	dbPool := db.GetPool()
+    dbPool := db.GetPool()
 
-	// User
-	userRepo := intRepo.NewUserRepository(dbPool)
-	userService := intService.NewUserService(userRepo)
-	userHandler := intHandler.NewUserHandler(userService)
+    // User
+    userRepo := intRepo.NewUserRepository(dbPool)
+    userService := intService.NewUserService(userRepo)
+    userHandler := intHandler.NewUserHandler(userService)
 
-	// Auth (simplified without Keycloak)
-	authHandler := intHandler.NewAuthHandler(userService)
+    // Auth (simplified without Keycloak)
+    authHandler := intHandler.NewAuthHandler(userService)
 
-	announcementRepo := intRepo.NewAnnouncementRepository(db.GetPool())
-	announcementService := intService.NewAnnouncementService(announcementRepo)
-	announcementHandler := intHandler.NewAnnouncementHandler(announcementService)
+    // Announcement&News
+    announcementRepo := intRepo.NewAnnouncementRepository(db.GetPool())
+    announcementService := intService.NewAnnouncementService(announcementRepo)
+    announcementHandler := intHandler.NewAnnouncementHandler(announcementService)
 
-	r := gin.Default()
+    // Public Documents
+    publicDocRepo := intRepo.NewPublicDocRepository(dbPool)
+    publicDocService := intService.NewPublicDocService(publicDocRepo)
+    publicDocHandler := intHandler.NewPublicDocHandler(publicDocService)
 
-	// Enable CORS
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8000"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-	}))
+    r := gin.Default()
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
-	})
+    // Enable CORS
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8000"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+    }))
 
-	// Register routes
-	intRoutes.RegisterUserRoutes(r, userHandler, authHandler)
+    r.GET("/health", func(c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+    })
 
-	// Register routes
-	intRoutes.RegisterAnnouncementRoutes(r, announcementHandler)
+    // Register routes
+    intRoutes.RegisterUserRoutes(r, userHandler, authHandler)
+    intRoutes.RegisterAnnouncementRoutes(r, announcementHandler)
+    intRoutes.RegisterPublicDocRoutes(r, publicDocHandler)
 
-	if err := r.Run(":8000"); err != nil {
-		log.Fatalf("failed to start server: %v", err)
-	}
+    if err := r.Run(":8000"); err != nil {
+        log.Fatalf("failed to start server: %v", err)
+    }
 }
