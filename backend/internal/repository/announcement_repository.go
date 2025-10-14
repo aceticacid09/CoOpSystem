@@ -245,8 +245,9 @@ func (r *announcementRepository) GetAttachmentFiles(ctx context.Context, attachm
 	rows, err := r.db.Query(ctx, `
         SELECT f.file_id, f.file_name, f.file_type, f.storage_path, f.uploaded_at
         FROM File f
-        INNER JOIN Attachment a ON f.file_id = a.file_id
-        WHERE a.attachment_id = $1
+        INNER JOIN Attachment_File af ON f.file_id = af.file_id
+        WHERE af.attachment_id = $1
+        ORDER BY f.uploaded_at DESC
     `, attachmentID)
 
 	if err != nil {
@@ -275,28 +276,50 @@ func (r *announcementRepository) GetAttachmentFiles(ctx context.Context, attachm
 
 // DeleteAttachment deletes an attachment and its files
 func (r *announcementRepository) DeleteAttachment(ctx context.Context, attachmentID int) error {
-	// Get file_id
-	var fileID *int
-	err := r.db.QueryRow(ctx, `
-        SELECT file_id FROM Attachment WHERE attachment_id = $1
-    `, attachmentID).Scan(&fileID)
+	// Start a transaction
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
-	if err != nil && err != pgx.ErrNoRows {
-		return fmt.Errorf("failed to get attachment: %w", err)
+	// Get all file IDs to delete physical files later
+	rows, err := tx.Query(ctx, `
+        SELECT file_id FROM Attachment_File WHERE attachment_id = $1
+    `, attachmentID)
+
+	if err != nil {
+		return fmt.Errorf("failed to get attachment files: %w", err)
 	}
 
-	// Delete attachment
-	_, err = r.db.Exec(ctx, `DELETE FROM Attachment WHERE attachment_id = $1`, attachmentID)
+	var fileIDs []int
+	for rows.Next() {
+		var fileID int
+		if err := rows.Scan(&fileID); err != nil {
+			rows.Close()
+			return fmt.Errorf("failed to scan file ID: %w", err)
+		}
+		fileIDs = append(fileIDs, fileID)
+	}
+	rows.Close()
+
+	// Delete attachment (CASCADE will delete from Attachment_File automatically)
+	_, err = tx.Exec(ctx, `DELETE FROM Attachment WHERE attachment_id = $1`, attachmentID)
 	if err != nil {
 		return fmt.Errorf("failed to delete attachment: %w", err)
 	}
 
-	// Delete file if exists
-	if fileID != nil {
-		_, err = r.db.Exec(ctx, `DELETE FROM File WHERE file_id = $1`, *fileID)
+	// Delete files
+	for _, fileID := range fileIDs {
+		_, err = tx.Exec(ctx, `DELETE FROM File WHERE file_id = $1`, fileID)
 		if err != nil {
 			return fmt.Errorf("failed to delete file: %w", err)
 		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil
@@ -336,14 +359,20 @@ func (r *announcementRepository) DeleteFile(ctx context.Context, fileID int) err
 	}
 	defer tx.Rollback(ctx)
 
-	// Get attachment_id that contains this file
+	// Get attachment_id that contains this file from junction table
 	var attachmentID *int
 	err = tx.QueryRow(ctx, `
-        SELECT attachment_id FROM Attachment WHERE file_id = $1
+        SELECT attachment_id FROM Attachment_File WHERE file_id = $1
     `, fileID).Scan(&attachmentID)
 
 	if err != nil && err != pgx.ErrNoRows {
 		return fmt.Errorf("failed to get attachment: %w", err)
+	}
+
+	// Delete from junction table
+	_, err = tx.Exec(ctx, `DELETE FROM Attachment_File WHERE file_id = $1`, fileID)
+	if err != nil {
+		return fmt.Errorf("failed to delete from junction table: %w", err)
 	}
 
 	// Delete the file
@@ -357,12 +386,11 @@ func (r *announcementRepository) DeleteFile(ctx context.Context, fileID int) err
 		return fmt.Errorf("file not found")
 	}
 
-	// Update attachment: decrement file_count and set file_id to NULL if this was the only file
+	// Update attachment: decrement file_count
 	if attachmentID != nil {
 		_, err = tx.Exec(ctx, `
             UPDATE Attachment
-            SET file_count = file_count - 1,
-                file_id = CASE WHEN file_count <= 1 THEN NULL ELSE file_id END
+            SET file_count = file_count - 1
             WHERE attachment_id = $1
         `, *attachmentID)
 

@@ -81,8 +81,14 @@ CREATE TABLE File (
 -- สร้างตาราง Attachment (ไฟล์แนบ)
 CREATE TABLE Attachment (
     attachment_id SERIAL PRIMARY KEY,
-    file_id INTEGER REFERENCES File(file_id),
     file_count INTEGER DEFAULT 0 NOT NULL
+);
+
+-- สร้างตาราง Attachment_File (ตารางเชื่อมโยงระหว่าง Attachment และ File)
+CREATE TABLE Attachment_File (
+    attachment_id INTEGER REFERENCES Attachment(attachment_id) ON DELETE CASCADE,
+    file_id INTEGER REFERENCES File(file_id) ON DELETE CASCADE,
+    PRIMARY KEY (attachment_id, file_id)
 );
 
 -- สร้างตาราง Announ_News (ประกาศข่าวสาร)
@@ -210,15 +216,35 @@ INSERT INTO File (storage_path, file_name, file_type) VALUES
 ('/uploads/documents/', 'company_profile.pdf', 'pdf'),  
 ('/uploads/news/', 'announcement_1.jpg', 'jpg'),  
 ('/uploads/student_docs/', 'resume_student1.pdf', 'pdf'),  
-('/uploads/student_docs/', 'portfolio_student1.pdf', 'pdf');  
+('/uploads/student_docs/', 'portfolio_student1.pdf', 'pdf'),
+('/uploads/news/', 'announcement_2.jpg', 'jpg'),
+('/uploads/news/', 'announcement_3.pdf', 'pdf'),
+('/uploads/student_docs/', 'transcript_student1.pdf', 'pdf');
   
 -- เพิ่มข้อมูลตัวอย่าง Attachment  
-INSERT INTO Attachment (file_id, file_count) VALUES  
-(1, 1),  
-(2, 1),  
-(3, 1),  
-(4, 1),  
-(5, 5);
+INSERT INTO Attachment (file_count) VALUES  
+(1),  -- attachment_id = 1 (for job position 1)
+(1),  -- attachment_id = 2 (for job position 2)
+(3),  -- attachment_id = 3 (for announcement 1, has 3 files)
+(1),  -- attachment_id = 4 (for student doc 1)
+(3);  -- attachment_id = 5 (for student doc 2, has 3 files)
+
+-- เพิ่มข้อมูลตัวอย่าง Attachment_File (Junction Table)
+INSERT INTO Attachment_File (attachment_id, file_id) VALUES
+-- Attachment 1 (Job Position 1) has 1 file
+(1, 1),
+-- Attachment 2 (Job Position 2) has 1 file
+(2, 2),
+-- Attachment 3 (Announcement 1) has 3 files
+(3, 3),
+(3, 6),
+(3, 7),
+-- Attachment 4 (Student Doc 1) has 1 file
+(4, 4),
+-- Attachment 5 (Student Doc 2) has 3 files
+(5, 5),
+(5, 8),
+(5, 4);  -- Reusing file 4 to show files can be shared
   
 -- เพิ่มข้อมูลตัวอย่าง Job_Position  
 INSERT INTO Job_Position (title, description, company_id, attachment_id, status) VALUES  
