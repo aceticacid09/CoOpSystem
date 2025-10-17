@@ -49,6 +49,11 @@ func main() {
     publicDocService := intService.NewPublicDocService(publicDocRepo)
     publicDocHandler := intHandler.NewPublicDocHandler(publicDocService)
 
+    // Job Position
+    jobPositionRepo := intRepo.NewJobPositionRepository(dbPool)
+    jobPositionService := intService.NewJobPositionService(jobPositionRepo)
+    jobPositionHandler := intHandler.NewJobPositionHandler(jobPositionService)
+
     r := gin.Default()
 
     // Enable CORS
@@ -68,6 +73,7 @@ func main() {
     intRoutes.RegisterUserRoutes(r, userHandler, authHandler)
     intRoutes.RegisterAnnouncementRoutes(r, announcementHandler)
     intRoutes.RegisterPublicDocRoutes(r, publicDocHandler)
+    intRoutes.RegisterJobPositionRoutes(r, jobPositionHandler)
 
     if err := r.Run(":8000"); err != nil {
         log.Fatalf("failed to start server: %v", err)
