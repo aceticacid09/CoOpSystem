@@ -267,9 +267,9 @@ func (r *jobPositionRepository) CreateJobPosition(ctx context.Context, jobPositi
 func (r *jobPositionRepository) UpdateJobPosition(ctx context.Context, id int, jobPosition models.JobPosition) error {
     _, err := r.db.Exec(ctx, `
         UPDATE Job_Position
-        SET title = $1, description = $2, company_id = $3, status = $4
-        WHERE job_id = $5
-    `, jobPosition.Title, jobPosition.Description, jobPosition.CompanyID, jobPosition.Status, id)
+        SET title = $1, description = $2, company_id = $3, attachment_id = $4, status = $5
+        WHERE job_id = $6
+    `, jobPosition.Title, jobPosition.Description, jobPosition.CompanyID, jobPosition.AttachmentID, jobPosition.Status, id)
 
     if err != nil {
         return fmt.Errorf("failed to update job position: %w", err)

@@ -176,8 +176,12 @@ func (h *JobPositionHandler) CreateJobPosition(c *gin.Context) {
 // UpdateJobPosition updates a job position
 // @Summary Update job position
 // @Tags job-positions
+// @Accept multipart/form-data
 // @Param id path int true "Job Position ID"
-// @Param request body models.UpdateJobPositionRequest true "Update request"
+// @Param title formData string false "Job Title"
+// @Param description formData string false "Job Description"
+// @Param company_id formData int false "Company ID"
+// @Param status formData string false "Status (open, closed, pending)"
 // @Success 200 {object} models.JobPositionWithDetails
 // @Router /api/v1/job-positions/{id} [put]
 func (h *JobPositionHandler) UpdateJobPosition(c *gin.Context) {
@@ -188,10 +192,45 @@ func (h *JobPositionHandler) UpdateJobPosition(c *gin.Context) {
         return
     }
 
-    var req models.UpdateJobPositionRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+    // Parse multipart form
+    if err := c.Request.ParseMultipartForm(32 << 20); err != nil { // 32 MB max
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form"})
         return
+    }
+
+    // Build update request from form data
+    req := models.UpdateJobPositionRequest{}
+
+    // Only update fields that are provided
+    if title := c.PostForm("title"); title != "" {
+        req.Title = &title
+    }
+
+    if description := c.PostForm("description"); description != "" {
+        req.Description = &description
+    }
+
+    if companyIDStr := c.PostForm("company_id"); companyIDStr != "" {
+        companyID, err := strconv.Atoi(companyIDStr)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid company_id"})
+            return
+        }
+        req.CompanyID = &companyID
+    }
+
+    // Also accept "company" as alternative field name (for flexibility)
+    if companyIDStr := c.PostForm("company"); companyIDStr != "" && req.CompanyID == nil {
+        companyID, err := strconv.Atoi(companyIDStr)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid company"})
+            return
+        }
+        req.CompanyID = &companyID
+    }
+
+    if status := c.PostForm("status"); status != "" {
+        req.Status = &status
     }
 
     jobPosition, err := h.jobPositionService.UpdateJobPosition(c.Request.Context(), id, req)
