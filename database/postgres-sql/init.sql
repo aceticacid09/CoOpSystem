@@ -65,6 +65,7 @@ CREATE TABLE Application (
     application_id SERIAL PRIMARY KEY,
     job_id INTEGER REFERENCES Job_Position(job_id),
     student_id INTEGER REFERENCES Student(student_id),
+    sdoc_id INTEGER REFERENCES StudentDoc(sdoc_id),
     status application_status DEFAULT 'pending',
     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

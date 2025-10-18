@@ -35,17 +35,6 @@ type TeacherInfo struct {
     ProfileImage *string `json:"profile_image,omitempty"`
 }
 
-// AttachmentDetail contains file information
-type AttachmentDetail struct {
-    FileID       int       `db:"file_id" json:"file_id"`
-    FileName     string    `db:"file
-
-_name" json:"file_name"`
-    FileType     *string   `db:"file_type" json:"file_type,omitempty"`
-    StoragePath  string    `db:"storage_path" json:"storage_path"`
-    UploadedAt   time.Time `db:"uploaded_at" json:"uploaded_at"`
-}
-
 // CreateAnnouncementRequest for creating new announcements
 type CreateAnnouncementRequest struct {
     Title       string  `json:"title" binding:"required"`
