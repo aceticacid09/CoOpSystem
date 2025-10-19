@@ -1,5 +1,6 @@
 CREATE type role_type as ENUM ('admin', 'teacher', 'student', 'company');
 CREATE type company_status as ENUM ('active', 'inactive', 'pending');
+CREATE type announcement_status as ENUM ('draft', 'published', 'archived');
 CREATE type job_status as ENUM ('open', 'closed', 'pending');
 CREATE type application_status as ENUM ('pending', 'approved', 'rejected');
 CREATE type doc_types as ENUM ('resume', 'cv', 'portfolio', 'transcript', 'other');
@@ -98,6 +99,7 @@ CREATE TABLE Announ_News (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     attachment_id INTEGER REFERENCES Attachment(attachment_id),
+    status announcement_status NOT NULL DEFAULT 'draft',
     teacher_id INTEGER REFERENCES Teacher(teacher_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

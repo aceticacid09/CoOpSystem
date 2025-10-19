@@ -23,7 +23,7 @@ func (r *announcementRepository) GetAnnouncementByID(ctx context.Context, id int
 
 	// Get announcement
 	err := r.db.QueryRow(ctx, `
-        SELECT post_id, title, description, attachment_id, teacher_id, created_at, updated_at
+        SELECT post_id, title, description, attachment_id, status, teacher_id, created_at, updated_at
         FROM Announ_News
         WHERE post_id = $1
     `, id).Scan(
@@ -31,6 +31,7 @@ func (r *announcementRepository) GetAnnouncementByID(ctx context.Context, id int
 		&announcement.Title,
 		&announcement.Description,
 		&announcement.AttachmentID,
+		&announcement.Status,
 		&announcement.TeacherID,
 		&announcement.CreatedAt,
 		&announcement.UpdatedAt,
@@ -73,7 +74,7 @@ func (r *announcementRepository) GetAllAnnouncements(ctx context.Context, limit,
 
 	// Get announcements
 	rows, err := r.db.Query(ctx, `
-        SELECT post_id, title, description, attachment_id, teacher_id, created_at, updated_at
+        SELECT post_id, title, description, attachment_id, status, teacher_id, created_at, updated_at
         FROM Announ_News
         ORDER BY created_at DESC
         LIMIT $1 OFFSET $2
@@ -93,6 +94,7 @@ func (r *announcementRepository) GetAllAnnouncements(ctx context.Context, limit,
 			&a.Title,
 			&a.Description,
 			&a.AttachmentID,
+			&a.Status,
 			&a.TeacherID,
 			&a.CreatedAt,
 			&a.UpdatedAt,
@@ -127,10 +129,10 @@ func (r *announcementRepository) GetAllAnnouncements(ctx context.Context, limit,
 func (r *announcementRepository) CreateAnnouncement(ctx context.Context, announcement models.Announcement) (int, error) {
 	var postID int
 	err := r.db.QueryRow(ctx, `
-        INSERT INTO Announ_News (title, description, attachment_id, teacher_id)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO Announ_News (title, description, attachment_id, status, teacher_id)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING post_id
-    `, announcement.Title, announcement.Description, announcement.AttachmentID, announcement.TeacherID).Scan(&postID)
+    `, announcement.Title, announcement.Description, announcement.AttachmentID, announcement.Status, announcement.TeacherID).Scan(&postID)
 
 	if err != nil {
 		return 0, fmt.Errorf("failed to create announcement: %w", err)
@@ -143,9 +145,9 @@ func (r *announcementRepository) CreateAnnouncement(ctx context.Context, announc
 func (r *announcementRepository) UpdateAnnouncement(ctx context.Context, id int, announcement models.Announcement) error {
 	_, err := r.db.Exec(ctx, `
         UPDATE Announ_News
-        SET title = $1, description = $2, teacher_id = $3, updated_at = NOW()
-        WHERE post_id = $4
-    `, announcement.Title, announcement.Description, announcement.TeacherID, id)
+        SET title = $1, description = $2, teacher_id = $3, status = $4, updated_at = NOW()
+        WHERE post_id = $5
+    `, announcement.Title, announcement.Description, announcement.TeacherID, announcement.Status, id)
 
 	if err != nil {
 		return fmt.Errorf("failed to update announcement: %w", err)
@@ -443,7 +445,7 @@ func (r *announcementRepository) SearchAnnouncements(ctx context.Context, keywor
 
 	// Get announcements
 	rows, err := r.db.Query(ctx, `
-        SELECT post_id, title, description, attachment_id, teacher_id, created_at, updated_at
+        SELECT post_id, title, description, attachment_id, status, teacher_id, created_at, updated_at
         FROM Announ_News
         WHERE title ILIKE $1 OR description ILIKE $1
         ORDER BY created_at DESC
@@ -463,6 +465,7 @@ func (r *announcementRepository) SearchAnnouncements(ctx context.Context, keywor
 			&a.Title,
 			&a.Description,
 			&a.AttachmentID,
+			&a.Status,
 			&a.TeacherID,
 			&a.CreatedAt,
 			&a.UpdatedAt,
