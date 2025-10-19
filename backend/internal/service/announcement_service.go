@@ -64,6 +64,11 @@ func (s *announcementService) CreateAnnouncement(ctx context.Context, req intMod
 
     var attachmentID *int
 
+    status := intModels.StatusDraft
+    if req.Status != nil {
+        status = *req.Status
+    }
+
     // Handle file uploads if provided
     if len(files) > 0 {
         log.Printf("Processing %d file(s)...", len(files))
@@ -89,6 +94,7 @@ func (s *announcementService) CreateAnnouncement(ctx context.Context, req intMod
         Title:        req.Title,
         Description:  req.Description,
         AttachmentID: attachmentID,
+        Status:       status,
         TeacherID:    req.TeacherID,
     }
 

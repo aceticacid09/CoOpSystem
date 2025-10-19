@@ -79,6 +79,7 @@ func (h *AnnouncementHandler) CreateAnnouncement(c *gin.Context) {
 
 	title := c.PostForm("title")
 	description := c.PostForm("description")
+	status := c.PostForm("status")
 	teacherIDStr := c.PostForm("teacher_id")
 
 	if title == "" {
@@ -93,6 +94,14 @@ func (h *AnnouncementHandler) CreateAnnouncement(c *gin.Context) {
 	if description != "" {
 		req.Description = &description
 	}
+
+	if status != "" {
+        status := models.AnnouncementStatus(status)
+        // Basic validation (optional but recommended)
+        if status == models.StatusDraft || status == models.StatusPublished || status == models.StatusArchived {
+            req.Status = &status
+        }
+    }
 
 	if teacherIDStr != "" {
 		teacherID, err := strconv.Atoi(teacherIDStr)
