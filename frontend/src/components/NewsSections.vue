@@ -29,7 +29,6 @@
 
 <script setup>
 import { ref, computed } from "vue";
-import { newsList } from "../data/newsData.js";
 import SearchBar from "../components/SearchBar.vue";
 import TabNavigation from "../components/TabNavigation.vue";
 import NewsCard from "../components/NewsCard.vue";
@@ -37,7 +36,7 @@ import NewsSidePanel from "../components/NewSidePanel.vue";
 
 // props เหมือนเดิม
 const props = defineProps({
-  items: { type: Array, default: null }, // เปลี่ยนเป็น null
+  items: { type: Array, default: null },
   maxHeight: { type: String, default: null },
   showBookmark: { type: Boolean, default: false },
   initialBookmarked: { type: Array, default: () => [] },

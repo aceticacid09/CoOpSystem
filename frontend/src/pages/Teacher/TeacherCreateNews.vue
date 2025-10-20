@@ -117,8 +117,8 @@
 
                     <div class="form-group">
                         <label>หัวข้อข่าว</label>
-                        <input type="text" v-model="newsForm.title" placeholder="เช่น เปิดรับสมัครสหกิจศึกษา ภาคเรียนที่ 1/2568"
-                            class="form-input" />
+                        <input type="text" v-model="newsForm.title"
+                            placeholder="เช่น เปิดรับสมัครสหกิจศึกษา ภาคเรียนที่ 1/2568" class="form-input" />
                     </div>
 
                     <div class="form-group">
@@ -212,39 +212,60 @@
                     <p class="helper-text">เลือกเวลาที่ต้องการประกาศข่าวสาร</p>
 
                     <div class="form-group">
-                        <div class="publish-options">
-                            <label class="radio-item">
-                                <input type="radio" v-model="publishType" value="immediate" name="publishType" />
-                                <div class="radio-content">
-                                    <div class="radio-box"></div>
-                                    <div class="radio-info">
-                                        <span class="radio-label">ประกาศทันที</span>
-                                        <span class="radio-description">ข่าวสารจะถูกเผยแพร่ทันทีหลังจากกดยืนยัน</span>
+                        <div class="form-group">
+                            <div class="publish-options">
+                                <!-- ⭐ ตัวเลือกที่ 1: แบบร่าง (ใหม่) -->
+                                <label class="radio-item">
+                                    <input type="radio" v-model="publishType" value="draft" name="publishType" />
+                                    <div class="radio-content">
+                                        <div class="radio-box"></div>
+                                        <div class="radio-info">
+                                            <span class="radio-label">บันทึกเป็นแบบร่าง</span>
+                                            <span class="radio-description">เก็บข่าวสารไว้โดยยังไม่เผยแพร่
+                                                สามารถกลับมาแก้ไขและเผยแพร่ทีหลังได้</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </label>
+                                </label>
 
-                            <label class="radio-item">
-                                <input type="radio" v-model="publishType" value="scheduled" name="publishType" />
-                                <div class="radio-content">
-                                    <div class="radio-box"></div>
-                                    <div class="radio-info">
-                                        <span class="radio-label">กำหนดวันเวลาประกาศ</span>
-                                        <span class="radio-description">เลือกวันและเวลาที่ต้องการให้ประกาศข่าวสาร</span>
+                                <!-- ตัวเลือกที่ 2: ประกาศทันที -->
+                                <label class="radio-item">
+                                    <input type="radio" v-model="publishType" value="immediate" name="publishType" />
+                                    <div class="radio-content">
+                                        <div class="radio-box"></div>
+                                        <div class="radio-info">
+                                            <span class="radio-label">ประกาศทันที</span>
+                                            <span
+                                                class="radio-description">ข่าวสารจะถูกเผยแพร่ทันทีหลังจากกดยืนยัน</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </label>
-                        </div>
+                                </label>
 
-                        <div v-if="publishType === 'scheduled'" class="schedule-inputs">
-                            <div class="datetime-group">
-                                <div class="input-wrapper">
-                                    <label>วันที่ประกาศ</label>
-                                    <input type="date" v-model="newsForm.publishDate" class="form-input" :min="minDate" />
-                                </div>
-                                <div class="input-wrapper">
-                                    <label>เวลาที่ประกาศ</label>
-                                    <input type="time" v-model="newsForm.publishTime" class="form-input" />
+                                <!-- ตัวเลือกที่ 3: กำหนดวันเวลา -->
+                                <label class="radio-item">
+                                    <input type="radio" v-model="publishType" value="scheduled" name="publishType" />
+                                    <div class="radio-content">
+                                        <div class="radio-box"></div>
+                                        <div class="radio-info">
+                                            <span class="radio-label">กำหนดวันเวลาประกาศ</span>
+                                            <span
+                                                class="radio-description">เลือกวันและเวลาที่ต้องการให้ประกาศข่าวสาร</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- แสดงช่องกรอกวันที่และเวลาเมื่อเลือก "กำหนดวันเวลา" -->
+                            <div v-if="publishType === 'scheduled'" class="schedule-inputs">
+                                <div class="datetime-group">
+                                    <div class="input-wrapper">
+                                        <label>วันที่ประกาศ</label>
+                                        <input type="date" v-model="newsForm.publishDate" class="form-input"
+                                            :min="minDate" />
+                                    </div>
+                                    <div class="input-wrapper">
+                                        <label>เวลาที่ประกาศ</label>
+                                        <input type="time" v-model="newsForm.publishTime" class="form-input" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -339,27 +360,7 @@
                         </div>
                     </div>
                 </div>
-
-                <div v-if="!hasPreviewContent" class="empty-preview-state">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="12" y1="18" x2="12" y2="12"></line>
-                        <line x1="9" y1="15" x2="15" y2="15"></line>
-                    </svg>
-                    <h3>ยังไม่มีข้อมูลสำหรับแสดงตัวอย่าง</h3>
-                    <p>กรุณากลับไปขั้นตอนที่ 1 เพื่อกรอกข้อมูลข่าวสาร</p>
-                    <button class="btn-secondary" @click="prevStep">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                        กลับไปขั้นตอนที่ 1
-                    </button>
-                </div>
-
+                
                 <div class="section-card confirmation-card">
                     <h3 style="text-align: center;">ยืนยันการประกาศข่าวสาร</h3>
                     <p class="confirmation-text">
@@ -375,9 +376,11 @@
                             <line x1="12" y1="16" x2="12.01" y2="16"></line>
                         </svg>
                         <p>
-                            {{ publishType === 'immediate' 
-                                ? 'เมื่อกดยืนยันแล้ว ข่าวสารจะถูกเผยแพร่ทันที' 
-                                : `ข่าวสารจะถูกเผยแพร่ในวันที่ ${formatScheduledDate()}` 
+                            {{ publishType === 'draft'
+                                ? 'ข่าวสารจะถูกบันทึกเป็นแบบร่าง และไม่มีการเผยแพร่'
+                                : publishType === 'immediate'
+                                    ? 'เมื่อกดยืนยันแล้ว ข่าวสารจะถูกเผยแพร่ทันที'
+                                    : `ข่าวสารจะถูกเผยแพร่ในวันที่ ${formatScheduledDate()}`
                             }}
                         </p>
                     </div>
@@ -477,17 +480,18 @@
 
                 <div class="success-info-card">
                     <div class="info-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="12" y1="8" x2="12" y2="12"></line>
                             <line x1="12" y1="16" x2="12.01" y2="16"></line>
                         </svg>
                         <p>
-                            {{ publishType === 'immediate' 
-                                ? 'ข่าวสารของคุณได้รับการเผยแพร่แล้ว นักศึกษาและสถานประกอบการสามารถเห็นข่าวสารนี้ได้ทันที' 
-                                : `ข่าวสารของคุณจะถูกเผยแพร่อัตโนมัติในวันที่ ${formatScheduledDate()}` 
+                            {{ publishType === 'draft' 
+                                ? 'ข่าวสารของคุณได้รับการบันทึกเป็นแบบร่างแล้ว คุณสามารถกลับมาแก้ไขและเผยแพร่ได้ในภายหลังผ่านเมนู "จัดการข่าวสาร"' 
+                                : publishType === 'immediate' 
+                                    ? 'ข่าวสารของคุณได้รับการเผยแพร่แล้ว นักศึกษาและสถานประกอบการสามารถเห็นข่าวสารนี้ได้ทันที' 
+                                    : `ข่าวสารของคุณจะถูกเผยแพร่อัตโนมัติในวันที่ ${formatScheduledDate()}` 
                             }}
                         </p>
                     </div>
@@ -505,7 +509,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import DashboardLayout from '../../components/DashboardLayout.vue';
 
 // =======================================================
@@ -522,6 +526,7 @@ const categories = [
 // 2. STATE MANAGEMENT (REFS & REACTIVES)
 // =======================================================
 const router = useRouter();
+const route = useRoute();
 
 // A. Navigation & Flow State
 const currentStep = ref(1);
@@ -539,7 +544,7 @@ const newsForm = reactive({
 // C. UI & Dropdown State
 const uploadedImages = ref([]);
 const currentImageIndex = ref(0);
-const publishType = ref('immediate');
+const publishType = ref('draft');
 const isCategoryDropdownOpen = ref(false);
 
 // =======================================================
@@ -553,21 +558,22 @@ const categoryDropdownRef = ref(null);
 // 4. COMPUTED PROPERTIES
 // =======================================================
 const isStep1Valid = computed(() => {
-    const hasBasicInfo = newsForm.title.trim() !== '' && 
-                         newsForm.category.trim() !== '' && 
-                         newsForm.description.trim() !== '';
-    
+    const hasBasicInfo = newsForm.title.trim() !== '' &&
+        newsForm.category.trim() !== '' &&
+        newsForm.description.trim() !== '';
+
+    // ⭐ ถ้าเลือกแบบร่าง: ต้องมีข้อมูลพื้นฐานเท่านั้น (ไม่บังคับวันที่)
+    if (publishType.value === 'draft') {
+        return hasBasicInfo;
+    }
+
+    // ถ้าเลือกกำหนดวันเวลา: ต้องมีข้อมูลพื้นฐาน + วันที่และเวลา
     if (publishType.value === 'scheduled') {
         return hasBasicInfo && newsForm.publishDate && newsForm.publishTime;
     }
-    
-    return hasBasicInfo;
-});
 
-const hasPreviewContent = computed(() => {
-    return newsForm.title.trim() !== '' ||
-        newsForm.description.trim() !== '' ||
-        uploadedImages.value.length > 0;
+    // ถ้าเลือกประกาศทันที: ต้องมีข้อมูลพื้นฐานเท่านั้น
+    return hasBasicInfo;
 });
 
 const minDate = computed(() => {
@@ -584,7 +590,8 @@ watch(previewMode, () => {
 });
 
 watch(publishType, (newType) => {
-    if (newType === 'immediate') {
+    // ⭐ ล้างวันที่เมื่อไม่ได้เลือก "กำหนดวันเวลา"
+    if (newType !== 'scheduled') {
         newsForm.publishDate = '';
         newsForm.publishTime = '';
     }
@@ -635,12 +642,43 @@ const createAnotherNews = () => {
     currentImageIndex.value = 0;
     publishType.value = 'immediate';
     currentStep.value = 1;
-    
+
     if (editor.value) {
         editor.value.innerHTML = '';
     }
-    
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ⭐ ฟังก์ชันโหลดข้อมูลแบบร่าง
+const loadDraftNews = (draftId) => {
+    // นำเข้า newsList จาก newsData
+    import('../../data/newsData.js').then((module) => {
+        const foundNews = module.newsList.find(n => n.id === draftId && n.status === 'draft');
+        
+        if (foundNews) {
+            // โหลดข้อมูลเข้า form
+            newsForm.title = foundNews.title;
+            newsForm.category = foundNews.category;
+            newsForm.description = foundNews.description;
+            
+            // ตั้งค่า publishType
+            publishType.value = 'draft';
+            
+            // โหลดรูปภาพถ้ามี
+            if (foundNews.images && foundNews.images.length > 0) {
+                uploadedImages.value = foundNews.images.map(img => ({
+                    preview: img,
+                    isExisting: true
+                }));
+            }
+            
+            // โหลด description เข้า editor
+            if (editor.value) {
+                editor.value.innerHTML = foundNews.description;
+            }
+        }
+    });
 };
 
 // B. Image Handling
@@ -775,6 +813,12 @@ onMounted(() => {
     document.addEventListener("click", handleClickOutside);
     if (editor.value) {
         newsForm.description = editor.value.innerHTML;
+    }
+    
+    // ⭐ ตรวจสอบว่ามี draftId ใน query หรือไม่
+    const draftId = route.query.draftId;
+    if (draftId) {
+        loadDraftNews(parseInt(draftId));
     }
 });
 
@@ -1368,7 +1412,7 @@ onBeforeUnmount(() => {
     transition: all 0.2s;
 }
 
-.radio-item input:checked + .radio-content {
+.radio-item input:checked+.radio-content {
     border-color: #037266;
     background: #f0f8f7;
 }
@@ -1384,12 +1428,12 @@ onBeforeUnmount(() => {
     transition: all 0.2s;
 }
 
-.radio-item input:checked + .radio-content .radio-box {
+.radio-item input:checked+.radio-content .radio-box {
     border-color: #037266;
     background: #fff;
 }
 
-.radio-item input:checked + .radio-content .radio-box::after {
+.radio-item input:checked+.radio-content .radio-box::after {
     content: '';
     position: absolute;
     top: 50%;

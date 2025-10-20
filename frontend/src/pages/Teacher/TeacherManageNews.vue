@@ -33,6 +33,20 @@
                 </div>
 
                 <div class="stat-card">
+                    <div class="stat-icon draft">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">แบบร่าง</span>
+                        <span class="stat-value">{{ draftCount }}</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
                     <div class="stat-icon scheduled">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -394,7 +408,7 @@ const newsToDelete = ref(null);
 const mockNewsData = ref(getPublishableNews());
 
 const tabs = ["ข่าวทั้งหมด", "ประชาสัมพันธ์", "ข่าวด่วน", "กิจกรรม", "ประกาศผลการคัดเลือก"];
-const statusOptions = ["ทั้งหมด", "เผยแพร่แล้ว", "รอเผยแพร่"];
+const statusOptions = ["ทั้งหมด", "เผยแพร่แล้ว", "รอเผยแพร่", "แบบร่าง"];
 
 let statusCheckInterval;
 
@@ -419,6 +433,10 @@ const scheduledCount = computed(() =>
     mockNewsData.value.filter(n => n.status === 'scheduled').length
 );
 
+const draftCount = computed(() =>
+    mockNewsData.value.filter(n => n.status === 'draft').length
+);
+
 const totalCount = computed(() => mockNewsData.value.length);
 
 // News Filtering & Sorting
@@ -435,6 +453,7 @@ const filteredNews = computed(() => {
         'ทั้งหมด': 'all',
         'เผยแพร่แล้ว': 'published',
         'รอเผยแพร่': 'scheduled',
+        'แบบร่าง': 'draft',
     };
     const mappedStatus = statusMap[statusFilter.value];
 
@@ -639,16 +658,26 @@ const toggleSelectAll = () => {
     }
 };
 
+
 const openSidePanel = (news) => {
-    selectedNews.value = news;
+    selectedNewsDetail.value = news;
 };
 
 const closeSidePanel = () => {
-    selectedNews.value = null;
+    selectedNewsDetail.value = null;
 };
 
 const editNews = (news) => {
-    router.push({ name: 'TeacherEditNews', params: { id: news.id } });
+    // ⭐ ถ้าเป็นแบบร่าง ให้ไปหน้า Create แทน
+    if (news.status === 'draft') {
+        router.push({ 
+            name: 'TeacherCreateNews', 
+            query: { draftId: news.id } // ส่ง id ไปด้วย
+        });
+    } else {
+        // สถานะอื่นๆ ไปหน้า Edit ตามปกติ
+        router.push({ name: 'TeacherEditNews', params: { id: news.id } });
+    }
     closeSidePanel();
 };
 
@@ -853,6 +882,11 @@ onBeforeUnmount(() => {
 
 .stat-icon.total {
     background: linear-gradient(135deg, #037266 0%, #026b5b 100%);
+    color: #fff;
+}
+
+.stat-icon.draft {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
     color: #fff;
 }
 
@@ -1271,6 +1305,11 @@ onBeforeUnmount(() => {
     color: #92400e;
 }
 
+.status-badge.draft {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
 .status-dot {
     width: 8px;
     height: 8px;
@@ -1542,6 +1581,7 @@ onBeforeUnmount(() => {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -1561,6 +1601,7 @@ onBeforeUnmount(() => {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

@@ -119,8 +119,8 @@
 
                     <div class="form-group">
                         <label>หัวข้อข่าว</label>
-                        <input type="text" v-model="newsForm.title" placeholder="เช่น เปิดรับสมัครสหกิจศึกษา ภาคเรียนที่ 1/2568"
-                            class="form-input" />
+                        <input type="text" v-model="newsForm.title"
+                            placeholder="เช่น เปิดรับสมัครสหกิจศึกษา ภาคเรียนที่ 1/2568" class="form-input" />
                     </div>
 
                     <div class="form-group">
@@ -214,54 +214,71 @@
                     <p class="helper-text">แก้ไขสถานะและเวลาที่ต้องการประกาศข่าวสาร</p>
 
                     <div class="form-group">
-                        <label>สถานะการประกาศ</label>
-                        <div class="custom-dropdown" ref="statusDropdownRef"
-                            @click="isStatusDropdownOpen = !isStatusDropdownOpen">
-                            <div class="dropdown-selected">
-                                <span>{{ getStatusText(newsForm.status) }}</span>
-                                <svg class="dropdown-arrow" :class="{ open: isStatusDropdownOpen }"
-                                    xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                            <transition name="dropdown-fade">
-                                <ul v-if="isStatusDropdownOpen" class="dropdown-menu">
-                                    <li @click.stop="selectStatus('published')">
-                                        <span class="status-badge published">
-                                            <span class="status-dot"></span>
-                                            เผยแพร่แล้ว
-                                        </span>
-                                    </li>
-                                    <li @click.stop="selectStatus('scheduled')">
-                                        <span class="status-badge scheduled">
-                                            <span class="status-dot"></span>
-                                            รอเผยแพร่
-                                        </span>
-                                    </li>
-                                    <li @click.stop="selectStatus('draft')">
-                                        <span class="status-badge draft">
-                                            <span class="status-dot"></span>
-                                            แบบร่าง
-                                        </span>
-                                    </li>
-                                </ul>
-                            </transition>
+                        <!-- แสดง Notice ถ้าข่าวสารเผยแพร่แล้ว -->
+                        <div v-if="isPublished" class="locked-status-notice">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <p>ข่าวสารนี้ถูกเผยแพร่แล้ว ไม่สามารถเปลี่ยนสถานะการประกาศได้</p>
                         </div>
-                        <p class="field-hint">เลือกสถานะของข่าวสาร</p>
-                    </div>
 
-                    <div class="form-group">
-                        <div class="schedule-inputs">
+                        <!-- ตัวเลือกการประกาศ (เหมือน TeacherCreateNews) -->
+                        <div class="publish-options">
+                            <!-- ตัวเลือก 1: แบบร่าง -->
+                            <label class="radio-item" :class="{ disabled: isPublished, active: publishType === 'draft' }">
+                                <input type="radio" v-model="publishType" value="draft" name="publishType"
+                                    :disabled="isPublished" />
+                                <div class="radio-content">
+                                    <div class="radio-box"></div>
+                                    <div class="radio-info">
+                                        <span class="radio-label">บันทึกเป็นแบบร่าง</span>
+                                        <span class="radio-description">เก็บข่าวสารไว้โดยยังไม่เผยแพร่</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- ตัวเลือก 2: ประกาศทันที -->
+                            <label class="radio-item" :class="{ disabled: isPublished, active: publishType === 'immediate' }">
+                                <input type="radio" v-model="publishType" value="immediate" name="publishType"
+                                    :disabled="isPublished" />
+                                <div class="radio-content">
+                                    <div class="radio-box"></div>
+                                    <div class="radio-info">
+                                        <span class="radio-label">ประกาศทันที</span>
+                                        <span class="radio-description">ข่าวสารจะถูกเผยแพร่ทันทีหลังจากบันทึก</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- ตัวเลือก 3: กำหนดวันเวลา -->
+                            <label class="radio-item" :class="{ disabled: isPublished, active: publishType === 'scheduled' }">
+                                <input type="radio" v-model="publishType" value="scheduled" name="publishType"
+                                    :disabled="isPublished" />
+                                <div class="radio-content">
+                                    <div class="radio-box"></div>
+                                    <div class="radio-info">
+                                        <span class="radio-label">กำหนดวันเวลาประกาศ</span>
+                                        <span class="radio-description">เลือกวันและเวลาที่ต้องการให้ประกาศ</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- แสดงช่องกรอกวันที่เมื่อเลือก scheduled หรือ published -->
+                        <div v-if="publishType === 'scheduled' || isPublished" class="schedule-inputs">
                             <div class="datetime-group">
                                 <div class="input-wrapper">
                                     <label>วันที่ประกาศ</label>
-                                    <input type="date" v-model="newsForm.publishDate" class="form-input" :min="minDate" />
+                                    <input type="date" v-model="newsForm.publishDate" class="form-input" :min="minDate"
+                                        :disabled="isPublished" />
                                 </div>
                                 <div class="input-wrapper">
                                     <label>เวลาที่ประกาศ</label>
-                                    <input type="time" v-model="newsForm.publishTime" class="form-input" />
+                                    <input type="time" v-model="newsForm.publishTime" class="form-input"
+                                        :disabled="isPublished" />
                                 </div>
                             </div>
                         </div>
@@ -313,6 +330,8 @@ const categories = [
 // =======================================================
 const isLoading = ref(true);
 const isSaving = ref(false);
+const publishType = ref('immediate');
+const originalStatus = ref(null);
 
 const newsForm = reactive({
     id: null,
@@ -328,7 +347,6 @@ const uploadedImages = ref([]);
 const currentImageIndex = ref(0);
 
 const isCategoryDropdownOpen = ref(false);
-const isStatusDropdownOpen = ref(false);
 
 // =======================================================
 // 4. DOM REFS
@@ -336,21 +354,34 @@ const isStatusDropdownOpen = ref(false);
 const fileInput = ref(null);
 const editor = ref(null);
 const categoryDropdownRef = ref(null);
-const statusDropdownRef = ref(null);
 
 // =======================================================
 // 5. COMPUTED PROPERTIES
 // =======================================================
-const isFormValid = computed(() => {
-    return newsForm.title.trim() !== '' &&
-        newsForm.category.trim() !== '' &&
-        newsForm.description.trim() !== '' &&
-        newsForm.publishDate !== '';
-});
+const isPublished = computed(() => originalStatus.value === 'published');
 
 const minDate = computed(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
+});
+
+const isFormValid = computed(() => {
+    const hasBasicInfo = newsForm.title.trim() !== '' &&
+        newsForm.category.trim() !== '' &&
+        newsForm.description.trim() !== '';
+    
+    // ถ้าเป็นแบบร่าง: ไม่บังคับวันที่
+    if (publishType.value === 'draft') {
+        return hasBasicInfo;
+    }
+    
+    // ถ้าเป็นกำหนดวันเวลา: บังคับวันที่
+    if (publishType.value === 'scheduled') {
+        return hasBasicInfo && newsForm.publishDate !== '';
+    }
+    
+    // ประกาศทันทีหรือเผยแพร่แล้ว
+    return hasBasicInfo;
 });
 
 // =======================================================
@@ -367,10 +398,10 @@ onBeforeUnmount(() => {
 
 const loadNewsData = () => {
     const newsId = parseInt(route.params.id);
-    
+
     setTimeout(() => {
         const foundNews = newsList.find(n => n.id === newsId);
-        
+
         if (foundNews) {
             // Load news data
             newsForm.id = foundNews.id;
@@ -378,12 +409,22 @@ const loadNewsData = () => {
             newsForm.category = foundNews.category;
             newsForm.description = foundNews.description;
             newsForm.status = foundNews.status || 'published';
-            
+            originalStatus.value = foundNews.status || 'published';
+
+            // ตั้งค่า publishType ตามสถานะของข่าวสาร
+            if (foundNews.status === 'draft') {
+                publishType.value = 'draft';
+            } else if (foundNews.status === 'scheduled') {
+                publishType.value = 'scheduled';
+            } else {
+                publishType.value = 'immediate';
+            }
+
             // Handle date
             const newsDate = new Date(foundNews.publishDate || foundNews.date);
             newsForm.publishDate = newsDate.toISOString().split('T')[0];
             newsForm.publishTime = '09:00'; // Default time
-            
+
             // Load images
             if (foundNews.images && foundNews.images.length > 0) {
                 uploadedImages.value = foundNews.images.map(img => ({
@@ -391,13 +432,13 @@ const loadNewsData = () => {
                     isExisting: true
                 }));
             }
-            
+
             // Load description into editor
             if (editor.value) {
                 editor.value.innerHTML = foundNews.description;
             }
         }
-        
+
         isLoading.value = false;
     }, 500);
 };
@@ -458,17 +499,9 @@ const selectCategory = (cat) => {
     isCategoryDropdownOpen.value = false;
 };
 
-const selectStatus = (status) => {
-    newsForm.status = status;
-    isStatusDropdownOpen.value = false;
-};
-
 const handleClickOutside = (event) => {
     if (categoryDropdownRef.value && !categoryDropdownRef.value.contains(event.target)) {
         isCategoryDropdownOpen.value = false;
-    }
-    if (statusDropdownRef.value && !statusDropdownRef.value.contains(event.target)) {
-        isStatusDropdownOpen.value = false;
     }
 };
 
@@ -485,20 +518,29 @@ const updateDescription = () => {
     newsForm.description = editor.value.innerHTML;
 };
 
-// =======================================================
-// 10. UTILITY FUNCTIONS
-// =======================================================
-const getStatusText = (status) => {
-    const statusMap = {
-        published: 'เผยแพร่แล้ว',
-        scheduled: 'รอเผยแพร่',
-        draft: 'แบบร่าง'
-    };
-    return statusMap[status] || status;
-};
+// Watch publishType เพื่ออัปเดต newsForm.status (ถ้ายังไม่ published)
+watch(publishType, (newType) => {
+    // ถ้าข่าวสารยังไม่ published ให้เปลี่ยนสถานะได้
+    if (!isPublished.value) {
+        if (newType === 'draft') {
+            newsForm.status = 'draft';
+            // ล้างวันที่
+            newsForm.publishDate = '';
+            newsForm.publishTime = '';
+        } else if (newType === 'scheduled') {
+            newsForm.status = 'scheduled';
+        } else if (newType === 'immediate') {
+            newsForm.status = 'published';
+            // ตั้งวันที่เป็นวันปัจจุบัน
+            const today = new Date();
+            newsForm.publishDate = today.toISOString().split('T')[0];
+            newsForm.publishTime = '09:00';
+        }
+    }
+});
 
 // =======================================================
-// 11. FORM ACTIONS
+// 10. FORM ACTIONS
 // =======================================================
 const goBack = () => {
     router.back();
@@ -682,6 +724,7 @@ const handleSave = async () => {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -956,6 +999,12 @@ const handleSave = async () => {
     background: #f0f8f7;
 }
 
+.form-input:disabled {
+    background: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
 /* =================================== */
 /* CUSTOM DROPDOWN */
 /* =================================== */
@@ -1048,42 +1097,6 @@ const handleSave = async () => {
 }
 
 /* =================================== */
-/* STATUS BADGE IN DROPDOWN */
-/* =================================== */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.status-badge.published {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.status-badge.scheduled {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-badge.draft {
-    background: #e5e7eb;
-    color: #4b5563;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-/* =================================== */
 /* RICH TEXT EDITOR */
 /* =================================== */
 .editor-toolbar {
@@ -1148,9 +1161,152 @@ const handleSave = async () => {
 }
 
 /* =================================== */
+/* LOCKED STATUS NOTICE */
+/* =================================== */
+.locked-status-notice {
+    background: #fff9e6;
+    border: 1px solid #ffd43b;
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.locked-status-notice svg {
+    color: #f59e0b;
+    flex-shrink: 0;
+}
+
+.locked-status-notice p {
+    font-size: 14px;
+    color: #92400e;
+    margin: 0;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* =================================== */
+/* PUBLISH OPTIONS (RADIO) */
+/* =================================== */
+.publish-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.radio-item {
+    display: block;
+    cursor: pointer;
+}
+
+.radio-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.radio-item input[type="radio"] {
+    display: none;
+}
+
+.radio-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #fff;
+    border: 2px solid #e5e5e5;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.radio-item:not(.disabled):hover .radio-content {
+    border-color: #037266;
+    background: #f0f8f7;
+}
+
+.radio-item input:checked + .radio-content {
+    border-color: #037266;
+    background: #f0f8f7;
+}
+
+.radio-item.disabled .radio-content {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+    cursor: not-allowed;
+}
+
+.radio-box {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #d0d0d0;
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: all 0.2s;
+}
+
+.radio-item input:checked + .radio-content .radio-box {
+    border-color: #037266;
+    background: #fff;
+}
+
+.radio-item.disabled .radio-box {
+    border-color: #d0d0d0;
+    background: #f5f5f5;
+}
+
+.radio-item input:checked + .radio-content .radio-box::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #037266;
+}
+
+.radio-item.disabled input:checked + .radio-content .radio-box::after {
+    background: #999;
+}
+
+.radio-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.radio-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.radio-item.disabled .radio-label {
+    color: #999;
+}
+
+.radio-description {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.5;
+}
+
+.radio-item.disabled .radio-description {
+    color: #aaa;
+}
+
+/* =================================== */
 /* SCHEDULE INPUTS */
 /* =================================== */
 .schedule-inputs {
+    margin-top: 20px;
     padding: 20px;
     background: #f9f9f9;
     border-radius: 10px;

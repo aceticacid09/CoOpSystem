@@ -40,7 +40,7 @@ import CompanyProfile from '../pages/Company/CompanyProfile.vue'
 import CompanyManageJobs from '../pages/Company/CompanyManageJobs.vue'
 
 const routes = [
-  
+
   // ✅ หน้า public
   { path: '/', component: Homepage },
   { path: '/documents', component: Documents },
@@ -61,10 +61,10 @@ const routes = [
 
   // อาจารย์
   { path: '/teacher', component: TeacherDashboard },
-  { path: '/teacher/news', component: TeacherNewsEvents },
+  { path: '/teacher/news', name: 'TeacherNewsEvents', component: TeacherNewsEvents },
   { path: '/teacher/news/create', name: 'TeacherCreateNews', component: TeacherCreateNews },
   { path: '/teacher/news/edit/:id', name: 'TeacherEditNews', component: TeacherEditNews },
-  { path: '/teacher/news/manage', component: TeacherManageNews },
+  { path: '/teacher/news/manage', name: 'TeacherManageNews', component: TeacherManageNews },
   { path: '/teacher/jobs', component: TeacherJobs },
   { path: '/teacher/jobs/create', component: TeacherCreateJobs },
 
