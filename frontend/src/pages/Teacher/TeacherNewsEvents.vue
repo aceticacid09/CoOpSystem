@@ -4,7 +4,7 @@
     <NewsSections 
       :show-bookmark="true"
       :initial-bookmarked="[1, 2, 4]"
-      :initial-saved="[3, 5]"
+      :initial-saved="[1, 2, 4]"
     />
   </DashboardLayout>
 </template>

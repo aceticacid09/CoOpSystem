@@ -1,4 +1,4 @@
-<!-- frontend/src/pages/Student/StudentNewsEvents.vue -->
+<!-- frontend/src/pages/Company/CompanyNewsEvents.vue -->
 <template>
   <DashboardLayout role="company">
     <NewsSections 

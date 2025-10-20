@@ -22,6 +22,8 @@ import StudentJobApplication from '../pages/Student/StudentJobApplications.vue'
 import TeacherDashboard from '../pages/Teacher/TeacherDasboard.vue'
 import TeacherNewsEvents from '../pages/Teacher/TeacherNewsEvents.vue'
 import TeacherCreateNews from '../pages/Teacher/TeacherCreateNews.vue'
+import TeacherEditNews from '../pages/Teacher/TeacherEditNews.vue'
+import TeacherManageNews from '../pages/Teacher/TeacherManageNews.vue'
 import TeacherJobs from '../pages/Teacher/TeacherJobs.vue'
 import TeacherCreateJobs from '../pages/Teacher/TeacherCreateJobs.vue'
 
@@ -29,15 +31,16 @@ import TeacherCreateJobs from '../pages/Teacher/TeacherCreateJobs.vue'
 import CompanyDashboard from '../pages/Company/CompanyDasboard.vue'
 import CompanyNewsEvents from '../pages/Company/CompanyNewsEvents.vue'
 import CompanyJobs from '../pages/Company/CompanyJobs.vue'
-import CompanyHistoryCreateJobs from '../pages/Company/CompanyHistoryCreateJobs.vue'
 import CompanyCreateJobs from '../pages/Company/CompanyCreateJobs.vue'
 import CompanyJobApplications from '../pages/Company/CompanyJobApplications.vue'
 import CompanyEvalutions from '../pages/Company/CompanyEvalutions.vue'
 import CompanyDocuments from '../pages/Company/CompanyDocuments.vue'
 import CompanyFavorites from '../pages/Company/CompanyFavorites.vue'
 import CompanyProfile from '../pages/Company/CompanyProfile.vue'
+import CompanyManageJobs from '../pages/Company/CompanyManageJobs.vue'
 
 const routes = [
+  
   // ✅ หน้า public
   { path: '/', component: Homepage },
   { path: '/documents', component: Documents },
@@ -59,7 +62,9 @@ const routes = [
   // อาจารย์
   { path: '/teacher', component: TeacherDashboard },
   { path: '/teacher/news', component: TeacherNewsEvents },
-  { path: '/teacher/news/create', component: TeacherCreateNews },
+  { path: '/teacher/news/create', name: 'TeacherCreateNews', component: TeacherCreateNews },
+  { path: '/teacher/news/edit/:id', name: 'TeacherEditNews', component: TeacherEditNews },
+  { path: '/teacher/news/manage', component: TeacherManageNews },
   { path: '/teacher/jobs', component: TeacherJobs },
   { path: '/teacher/jobs/create', component: TeacherCreateJobs },
 
@@ -67,7 +72,7 @@ const routes = [
   { path: '/company', component: CompanyDashboard },
   { path: '/company/news', component: CompanyNewsEvents },
   { path: '/company/jobs', component: CompanyJobs },
-  { path: '/company/jobs/history', component: CompanyHistoryCreateJobs },
+  { path: '/company/jobs/manage', component: CompanyManageJobs },
   { path: '/company/jobs/create', component: CompanyCreateJobs },
   { path: '/company/jobs/applications', component: CompanyJobApplications },
   { path: '/company/evaluation/students', component: CompanyEvalutions },

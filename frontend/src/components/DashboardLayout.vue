@@ -140,7 +140,8 @@ const menus = {
       icon: icons.news,
       submenu: [
         { name: 'ค้นหาข่าวสาร', link: '/teacher/news' },
-        { name: 'สร้างข่าวสารใหม่', link: '/teacher/news/create' }
+        { name: 'สร้างข่าวสารใหม่', link: '/teacher/news/create' },
+        { name: 'จัดการข่าวสารเเละกิจกรรม', link: '/teacher/news/manage' }
       ]
     },
     {
@@ -179,8 +180,8 @@ const menus = {
       icon: icons.announce,
       submenu: [
         { name: 'ค้นหางาน', link: '/company/jobs' },
-        { name: 'ประวัติประกาศงาน', link: '/company/jobs/history' },
         { name: 'สร้างประกาศงานใหม่', link: '/company/jobs/create' },
+        { name: 'จัดการประกาศงาน', link: '/company/jobs/manage' },
         { name: 'ใบสมัครที่ได้รับ', link: '/company/jobs/applications' }
       ]
     },
@@ -191,6 +192,7 @@ const menus = {
         { name: 'ประเมินนักศึกษา', link: '/company/evaluation/students' }
       ]
     },
+    { name: 'ข้อมูลส่วนตัว', link: '/company/profile', icon: icons.user },
     { name: 'รายการโปรด', link: '/company/favorites', icon: icons.fav },
     { name: 'เอกสาร', link: '/company/documents', icon: icons.doc }
   ]

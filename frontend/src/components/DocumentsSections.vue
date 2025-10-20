@@ -2,12 +2,8 @@
 <template>
   <section class="documents-section container">
     <!-- Tabs -->
-    <div class="tabs">
-      <button v-for="tab in tabs" :key="tab" class="tab-btn" :class="{ active: activeTab === tab }"
-        @click="activeTab = tab">
-        {{ tab }}
-      </button>
-    </div>
+    <TabNavigation v-model="activeTab" :tabs="tabs" />
+
 
     <!-- Accordion -->
     <div class="accordion">
@@ -40,6 +36,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import TabNavigation from "../components/TabNavigation.vue";
 
 // แท็บเมนู
 const tabs = ["แบบฟอร์มทั่วไป", "คู่มือ"];
@@ -53,7 +50,6 @@ const toggleAccordion = (index) => {
   activeIndex.value = activeIndex.value === index ? null : index;
 };
 
-// mock data ของเอกสาร (จริงๆ import มาจากไฟล์ data.js ได้เหมือน news)
 const departments = [
   // ===============================
   // แบบฟอร์มทั่วไป

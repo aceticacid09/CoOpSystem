@@ -1,13 +1,13 @@
-<!-- frontend/src/pages/CompanyJobApplications.vue -->
+<!-- frontend/src/pages/Company/CompanyManageJobs.vue -->
 <template>
     <DashboardLayout role="company">
-        <JobApplicationsList />
+        <ManageJobsSections />
     </DashboardLayout>
 </template>
 
 <script setup>
+import ManageJobsSections from '../../components/ManageJobsSections.vue';
 import DashboardLayout from '../../components/DashboardLayout.vue';
-import JobApplicationsList from '../../components/JobApplicationsList.vue';
 
 </script>
 
