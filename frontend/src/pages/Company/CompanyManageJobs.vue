@@ -1,12 +1,12 @@
-<!-- frontend/src/pages/Student/CompanyHistoryCreateJobs.vue -->
+<!-- frontend/src/pages/Company/CompanyManageJobs.vue -->
 <template>
     <DashboardLayout role="company">
-        <HistoryCreateJobsSections />
+        <ManageJobsSections />
     </DashboardLayout>
 </template>
 
 <script setup>
-import HistoryCreateJobsSections from '../../components/HistoryCreateJobsSections.vue';
+import ManageJobsSections from '../../components/ManageJobsSections.vue';
 import DashboardLayout from '../../components/DashboardLayout.vue';
 
 </script>

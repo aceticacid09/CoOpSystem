@@ -3,12 +3,7 @@
   <DashboardLayout role="student">
     <section class="profile-section container">
       <!-- Tabs -->
-      <div class="tabs">
-        <button v-for="tab in tabs" :key="tab" class="tab-btn" :class="{ active: activeTab === tab }"
-          @click="activeTab = tab">
-          {{ tab }}
-        </button>
-      </div>
+      <TabNavigation v-model="activeTab" :tabs="tabs" />
 
       <!-- ========== ข้อมูลนักศึกษา (Read-only) ========== -->
       <div v-if="activeTab === 'ข้อมูลนักศึกษา'" class="profile-content">
@@ -284,6 +279,7 @@
 <script setup>
 import DashboardLayout from "../../components/DashboardLayout.vue";
 import { ref, reactive } from "vue";
+import TabNavigation from "../../components/TabNavigation.vue";
 
 // Tabs
 const tabs = ["ข้อมูลนักศึกษา", "ข้อมูลการสมัครงาน"];

@@ -4,46 +4,19 @@
     <section class="history-section container">
       <!-- ========== FILTERS & SEARCH ========== -->
       <div class="history-controls">
-        <div class="filter-row">
-          <!-- Company Dropdown -->
-          <div class="filter-group">
-            <label class="filter-label">บริษัท</label>
-            <div class="custom-dropdown" ref="companyDropdownRef"
-              @click="isCompanyDropdownOpen = !isCompanyDropdownOpen">
-              <div class="dropdown-selected">
-                <span>{{ selectedCompany }}</span>
-                <svg class="dropdown-arrow" :class="{ open: isCompanyDropdownOpen }" xmlns="http://www.w3.org/2000/svg"
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-              <transition name="dropdown-fade">
-                <ul v-if="isCompanyDropdownOpen" class="dropdown-menu">
-                  <li v-for="company in companies" :key="company" @click.stop="selectCompany(company)">
-                    {{ company }}
-                  </li>
-                </ul>
-              </transition>
-            </div>
-          </div>
-
-          <!-- Search Box -->
-          <div class="search-box">
-            <input type="text" v-model="searchText" placeholder="ค้นหาชื่อตำแหน่ง หรือบริษัท" />
-          </div>
-
-          <!-- Search Button -->
-          <button class="btn-search">ค้นหา</button>
-
-          <!-- Filter Button -->
-          <button class="btn-sort">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="#9CA3AF" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 6h18M3 12h12M3 18h6" />
-            </svg>
-          </button>
-        </div>
+        <CustomDropdown 
+          label="บริษัท" 
+          v-model="selectedCompany" 
+          :options="companies"
+          width="280px"
+        />
+        
+        <SearchBar 
+          v-model="searchText" 
+          placeholder="ค้นหาชื่อตำแหน่ง หรือบริษัท"
+          :is-ascending="isAscending"
+          @toggle-sort="toggleSort"
+        />
       </div>
 
       <!-- ========== HISTORY CARDS ========== -->
@@ -86,45 +59,117 @@
           </div>
 
           <div class="card-actions">
-            <button class="btn-detail">ดูประกาศงาน</button>
+            <button class="btn-detail" @click="openPanel(record)">ดูประกาศงาน</button>
             <button class="btn-application">ดูใบสมัครงาน</button>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- ========== JOB DETAIL SIDE PANEL ========== -->
+    <div v-if="selectedJob" class="side-panel-overlay" @click.self="closePanel">
+      <div class="side-panel">
+        <button class="side-close" @click="closePanel">&times;</button>
+        <div class="side-panel-inner">
+          <div class="side-header-top">
+            <img class="side-logo" :src="selectedJob.logo" alt="logo" />
+            <div class="side-title-block">
+              <div class="side-title">{{ selectedJob.title }}</div>
+              <div class="side-company-row">
+                <span class="side-company-name">{{ selectedJob.company }}</span>
+                <span class="side-company-sep"></span>
+                <span class="side-company-all-jobs">ดูงานทั้งหมด</span>
+              </div>
+              <span class="side-department-label">
+                {{ selectedJob.department }}
+              </span>
+            </div>
+          </div>
+          <div class="side-meta-row">
+            <span class="side-meta-item">
+              <svg width="22" height="19" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              ประกาศเมื่อ {{ selectedJob.postDate }}
+            </span>
+          </div>
+          <div class="side-meta-row">
+            <span class="side-meta-item">
+              <svg width="22" height="19" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              ปิดรับสมัคร {{ selectedJob.closeDate }} (ระยะเวลา
+              {{ selectedJob.applyDuration }})
+            </span>
+          </div>
+          <div class="side-meta-row">
+            <span class="side-meta-item">
+              <svg width="22" height="22" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M22 10L12 4 2 10l10 6 10-6z"></path>
+                <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"></path>
+              </svg>
+              ปีการศึกษา {{ selectedJob.academicYear }} ภาคที่
+              {{ selectedJob.semester }}
+            </span>
+          </div>
+
+          <!-- Images Preview -->
+          <div v-if="selectedJob.images && selectedJob.images.length" class="side-images-preview">
+            <div class="side-image-layout">
+              <div class="side-image-large">
+                <img :src="selectedJob.images[selectedImageIndex]" alt="job-image-large" />
+              </div>
+              <div class="side-image-thumbs-wrapper">
+                <div class="side-image-thumbs">
+                  <div v-for="(img, i) in selectedJob.images" :key="i" class="side-image-thumb"
+                    :class="{ active: selectedImageIndex === i }" @click.stop="selectedImageIndex = i">
+                    <img :src="img" alt="job-thumb" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="side-detail-content">
+            <div class="side-detail-title">รายละเอียดงาน</div>
+            <div class="side-description">{{ selectedJob.description }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </DashboardLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed } from "vue";
 import DashboardLayout from '../../components/DashboardLayout.vue';
+import CustomDropdown from '../../components/CustomDropdown.vue';
+import SearchBar from '../../components/SearchBar.vue';
+import jobsList from '../../data/jobsData.js';
 
-const isCompanyDropdownOpen = ref(false);
 const selectedCompany = ref("ทั้งหมด");
 const searchText = ref("");
-const companyDropdownRef = ref(null);
+const isAscending = ref(true);
+const selectedJob = ref(null);
+const selectedImageIndex = ref(0);
 
 const monthsThai = [
-  "มกราคม",
-  "กุมภาพันธ์",
-  "มีนาคม",
-  "เมษายน",
-  "พฤษภาคม",
-  "มิถุนายน",
-  "กรกฎาคม",
-  "สิงหาคม",
-  "กันยายน",
-  "ตุลาคม",
-  "พฤศจิกายน",
-  "ธันวาคม"
+  "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+  "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
 ];
 
+// ใช้ข้อมูลจาก jobsData.js โดยสร้าง mapping ระหว่าง jobId กับสถานะการสมัคร
 const applicationRecords = ref([
   {
     id: 1,
-    jobTitle: "Frontend Developer (In-tern)",
-    company: "Google (Thailand) Company Limited",
-    applicationDate: "11/09/68",
+    jobId: 1, // อ้างอิงไปยัง job id ใน jobsData.js
+    applicationDate: "01/01/68",
     stages: [
       { name: "กดสมัคร", status: "passed" },
       { name: "ตรวจสอบเอกสาร", status: "current" },
@@ -135,9 +180,8 @@ const applicationRecords = ref([
   },
   {
     id: 2,
-    jobTitle: "Frontend Developer",
-    company: "AAA ltd.",
-    applicationDate: "11/09/68",
+    jobId: 2,
+    applicationDate: "05/02/68",
     stages: [
       { name: "กดสมัคร", status: "passed" },
       { name: "ตรวจสอบเอกสาร", status: "passed" },
@@ -148,9 +192,8 @@ const applicationRecords = ref([
   },
   {
     id: 3,
-    jobTitle: "Frontent Developer",
-    company: "ABCD ltd.",
-    applicationDate: "11/09/68",
+    jobId: 3,
+    applicationDate: "10/03/68",
     stages: [
       { name: "กดสมัคร", status: "passed" },
       { name: "ตรวจสอบเอกสาร", status: "passed" },
@@ -161,9 +204,8 @@ const applicationRecords = ref([
   },
   {
     id: 4,
-    jobTitle: "UI/UX Designer",
-    company: "Tech Innovate Co.",
-    applicationDate: "10/09/68",
+    jobId: 4,
+    applicationDate: "20/04/68",
     stages: [
       { name: "กดสมัคร", status: "passed" },
       { name: "ตรวจสอบเอกสาร", status: "rejected" },
@@ -174,9 +216,8 @@ const applicationRecords = ref([
   },
   {
     id: 5,
-    jobTitle: "Backend Developer",
-    company: "Digital Solutions Ltd.",
-    applicationDate: "09/09/68",
+    jobId: 5,
+    applicationDate: "01/05/68",
     stages: [
       { name: "กดสมัคร", status: "passed" },
       { name: "ตรวจสอบเอกสาร", status: "passed" },
@@ -187,9 +228,8 @@ const applicationRecords = ref([
   },
   {
     id: 6,
-    jobTitle: "Data Analyst",
-    company: "Analytics Pro Group",
-    applicationDate: "08/09/68",
+    jobId: 9,
+    applicationDate: "15/09/68",
     stages: [
       { name: "กดสมัคร", status: "passed" },
       { name: "ตรวจสอบเอกสาร", status: "passed" },
@@ -200,20 +240,37 @@ const applicationRecords = ref([
   }
 ]);
 
+// รวมข้อมูลจาก applicationRecords กับ jobsList
+const enrichedRecords = computed(() => {
+  return applicationRecords.value.map(record => {
+    const job = jobsList.find(j => j.id === record.jobId);
+    return {
+      ...record,
+      jobTitle: job?.title || 'ไม่พบข้อมูล',
+      company: job?.company || 'ไม่พบข้อมูล',
+      department: job?.department || '',
+      logo: job?.logo || '',
+      postDate: job?.postDate || '',
+      closeDate: job?.closeDate || '',
+      applyDuration: job?.applyDuration || '',
+      academicYear: job?.academicYear || '',
+      semester: job?.semester || '',
+      description: job?.description || '',
+      images: job?.images || [],
+      title: job?.title || ''
+    };
+  });
+});
+
+// สร้างรายการบริษัททั้งหมดจาก enrichedRecords
 const companies = computed(() => {
-  const uniqueCompanies = new Set(applicationRecords.value.map(r => r.company));
+  const uniqueCompanies = new Set(enrichedRecords.value.map(r => r.company));
   return ["ทั้งหมด", ...Array.from(uniqueCompanies)];
 });
 
-const selectCompany = (company) => {
-  selectedCompany.value = company;
-  isCompanyDropdownOpen.value = false;
-};
-
-const handleClickOutside = (event) => {
-  if (companyDropdownRef.value && !companyDropdownRef.value.contains(event.target)) {
-    isCompanyDropdownOpen.value = false;
-  }
+// ฟังก์ชันสำหรับ toggle การเรียงลำดับ
+const toggleSort = () => {
+  isAscending.value = !isAscending.value;
 };
 
 const formatDate = (dateStr) => {
@@ -221,7 +278,6 @@ const formatDate = (dateStr) => {
   const day = parts[0];
   const month = parseInt(parts[1]) - 1;
   const year = parseInt(parts[2]) + 2500;
-
   return `${day} ${monthsThai[month]} ${year}`;
 };
 
@@ -280,7 +336,8 @@ const getConnectorClass = (stages, index) => {
 };
 
 const filteredRecords = computed(() => {
-  return applicationRecords.value.filter(record => {
+  // กรองตามบริษัทและคำค้นหา
+  let filtered = enrichedRecords.value.filter(record => {
     if (selectedCompany.value !== "ทั้งหมด" && record.company !== selectedCompany.value) return false;
     if (searchText.value.trim()) {
       const txt = searchText.value.toLowerCase();
@@ -288,15 +345,19 @@ const filteredRecords = computed(() => {
     }
     return true;
   });
+
+  // เรียงลำดับตามวันที่สมัคร
+  return isAscending.value ? filtered : [...filtered].reverse();
 });
 
-onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
-});
+const openPanel = (record) => {
+  selectedJob.value = record;
+  selectedImageIndex.value = 0;
+};
 
-onBeforeUnmount(() => {
-  document.removeEventListener("click", handleClickOutside);
-});
+const closePanel = () => {
+  selectedJob.value = null;
+};
 </script>
 
 <style scoped>
@@ -312,8 +373,18 @@ onBeforeUnmount(() => {
 }
 
 .history-controls {
-  padding: 10px 0;
-  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: end;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .history-controls {
+    grid-template-columns: 1fr;
+  }
 }
 
 .filter-row {
@@ -321,159 +392,6 @@ onBeforeUnmount(() => {
   gap: 12px;
   align-items: flex-end;
   flex-wrap: wrap;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.filter-label {
-  font-size: 13px;
-  color: #6b6b6b;
-  font-weight: 500;
-}
-
-.custom-dropdown {
-  position: relative;
-  width: 250px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.dropdown-selected {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 9px 14px;
-  background: #fff;
-  border: 1px solid #e5e7e6;
-  border-radius: 10px;
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(10, 10, 10, 0.02);
-}
-
-.dropdown-selected:hover {
-  border-color: #037266;
-  box-shadow: 0 4px 12px rgba(3, 114, 102, 0.08);
-}
-
-.dropdown-arrow {
-  transition: transform 0.25s ease;
-  flex-shrink: 0;
-  margin-left: 8px;
-}
-
-.dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  width: 100%;
-  background: #fff;
-  border: 1px solid #e5e7e6;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(6, 20, 18, 0.12);
-  max-height: 240px;
-  overflow-y: auto;
-  z-index: 100;
-  list-style: none;
-  margin: 0;
-  padding: 6px;
-}
-
-.dropdown-menu li {
-  padding: 9px 12px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.15s ease;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.dropdown-menu li:hover {
-  background: #f0f8f7;
-  color: #037266;
-}
-
-.dropdown-fade-enter-active,
-.dropdown-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  transform-origin: top;
-}
-
-.dropdown-fade-enter-from {
-  opacity: 0;
-  transform: translateY(-8px) scale(0.95);
-}
-
-.dropdown-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-4px) scale(0.98);
-}
-
-.search-box {
-  flex: 1;
-  width: max-content;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #eef0ef;
-  border-radius: 12px;
-  outline: none;
-  font-size: 14px;
-  background: #fff;
-  transition: box-shadow 0.12s, border-color 0.12s;
-}
-
-.search-box input:focus {
-  border-color: #0b6b57;
-  box-shadow: 0 8px 22px rgba(11, 107, 87, 0.06);
-}
-
-.btn-search {
-  background: #0b6b57;
-  color: #fff;
-  border: none;
-  padding: 9px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  box-shadow: 0 6px 18px rgba(11, 107, 87, 0.08);
-  transition: transform 0.2s;
-}
-
-.btn-search:hover {
-  transform: translateY(-2px);
-}
-
-.btn-sort {
-  background: #f1f1f1;
-  border: none;
-  padding: 8px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-sort:hover {
-  background: #e8e8e8;
-  transform: translateY(-2px);
 }
 
 /* ========== HISTORY CARDS ========== */
@@ -534,7 +452,7 @@ onBeforeUnmount(() => {
   font-weight: 400;
 }
 
-/* ========== STATUS BADGES (ปรับสีใหม่) ========== */
+/* ========== STATUS BADGES ========== */
 .status-badge {
   padding: 8px 20px;
   border-radius: 20px;
@@ -545,31 +463,26 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-/* ตรวจสอบเอกสาร - น้ำเงินอ่อน */
 .status-badge.applying {
   background: #dbeafe;
   color: #1e40af;
 }
 
-/* นัดสัมภาษณ์ - ฟ้าอ่อน */
 .status-badge.interview {
   background: #e0f2fe;
   color: #0369a1;
 }
 
-/* รอพิจารณา - เหลืองอ่อน (เหมือนเดิม) */
 .status-badge.considering {
   background: #fef3c7;
   color: #92400e;
 }
 
-/* ผ่านการคัดเลือก - เขียว */
 .status-badge.completed {
   background: #d1fae5;
   color: #065f46;
 }
 
-/* ไม่ผ่านการคัดเลือก - แดง */
 .status-badge.rejected {
   background: #fee2e2;
   color: #991b1b;
@@ -649,13 +562,10 @@ onBeforeUnmount(() => {
 }
 
 @keyframes pulseIndicator {
-
-  0%,
-  100% {
+  0%, 100% {
     box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2), 0 3px 12px rgba(245, 158, 11, 0.3);
     transform: scale(1);
   }
-
   50% {
     box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.1), 0 3px 12px rgba(245, 158, 11, 0.3);
     transform: scale(1.02);
@@ -751,21 +661,307 @@ onBeforeUnmount(() => {
   transform: translateY(0);
 }
 
+/* ========== SIDE PANEL ========== */
+.side-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1000;
+}
+
+.side-panel {
+  background: #fff;
+  width: 697px;
+  max-width: 90%;
+  height: 100%;
+  padding: 40px 30px;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px 0 0 12px;
+  transform: translateX(100%);
+  animation: slideInFromRight 0.35s forwards ease-out;
+}
+
+@keyframes slideInFromRight {
+  to {
+    transform: translateX(0);
+  }
+}
+
+.side-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #ffd43b;
+  color: #969696;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.side-close:hover {
+  background: #ffc800;
+  transform: scale(1.05);
+}
+
+.side-panel-inner {
+  padding: 46px 34px 38px 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 100vh;
+}
+
+.side-header-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 26px;
+  margin-bottom: 4px;
+}
+
+.side-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f3f3f4;
+  border: 2.2px solid #e1e1e1;
+  flex-shrink: 0;
+  box-shadow: 0 2px 13px rgba(8, 12, 22, 0.11);
+}
+
+.side-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+}
+
+.side-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 2px;
+  margin-top: 0;
+  word-break: break-word;
+}
+
+.side-company-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 0;
+}
+
+.side-company-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: #037266;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.side-company-sep {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #d7d7d7;
+  display: inline-block;
+}
+
+.side-company-all-jobs {
+  color: #888;
+  font-size: 14px;
+}
+
+.side-department-label {
+  display: inline-block;
+  background-color: #cee5e2;
+  color: #037266;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 3px 14px;
+  letter-spacing: 0.04em;
+  margin-top: 7px;
+  align-self: flex-start;
+}
+
+.side-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  margin: 7px 0 0 0;
+  font-size: 14px;
+  color: #667;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+.side-meta-row+.side-meta-row {
+  margin-top: 0;
+}
+
+.side-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+  color: #3b5454;
+  font-weight: 500;
+  margin-bottom: 0.5px;
+}
+
+.side-meta-item svg {
+  flex-shrink: 0;
+  margin-bottom: -2px;
+}
+
+.side-images-preview {
+  margin: 25px 0 11px 0;
+  display: flex;
+  flex-direction: row;
+  gap: 11px;
+}
+
+.side-image-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.side-image-large {
+  width: 360px;
+  height: 420px;
+  background: #f3f3f4;
+  border-radius: 13px;
+  border: 1.5px solid #e1e1e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 11px rgba(8, 12, 22, 0.09);
+  flex-shrink: 0;
+}
+
+.side-image-large img {
+  width: 95%;
+  height: 95%;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.07);
+}
+
+.side-image-thumbs-wrapper {
+  height: 420px;
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
+}
+
+.side-image-thumbs-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.side-image-thumbs-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.side-image-thumbs-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.side-image-thumbs-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.side-image-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-width: 96px;
+}
+
+.side-image-thumb {
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: #f3f3f4;
+  cursor: pointer;
+  box-shadow: 0 1px 6px rgba(8, 12, 22, 0.09);
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.side-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.side-image-thumb.active {
+  border-color: #037266;
+  box-shadow: 0 3px 12px rgba(3, 114, 102, 0.18);
+  transform: scale(1.03);
+}
+
+.side-image-thumb:hover {
+  border-color: #037266;
+  box-shadow: 0 3px 12px rgba(3, 114, 102, 0.14);
+}
+
+.side-detail-content {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.side-detail-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 3px;
+}
+
+.side-description {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #444;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  white-space: pre-line;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
-  .filter-row {
-    gap: 10px;
-  }
-
-  .custom-dropdown {
-    width: 200px;
-  }
-
-  .search-box {
-    min-width: 250px;
-    max-width: 400px;
-  }
-
   .history-card {
     padding: 20px 24px;
   }
@@ -778,54 +974,45 @@ onBeforeUnmount(() => {
   .status-badge {
     align-self: flex-start;
   }
+
+  .side-panel-inner {
+    padding: 28px 20px 21px 20px;
+  }
+
+  .side-image-layout {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .side-image-large {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+  }
+
+  .side-image-thumbs-wrapper {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    overflow-x: auto;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .side-image-thumbs {
+    flex-direction: row;
+    gap: 10px;
+    width: max-content;
+  }
+
+  .side-image-thumb {
+    width: 80px;
+    height: 80px;
+  }
 }
 
 @media (max-width: 650px) {
-  .filter-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .filter-group,
-  .search-box {
-    width: 100%;
-  }
-
-  .custom-dropdown {
-    width: 100%;
-  }
-
-  .search-box {
-    max-width: 100%;
-  }
-
-  .btn-search,
-  .btn-sort {
-    width: 100%;
-  }
-
-  .filter-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .filter-group {
-    grid-column: span 2;
-  }
-
-  .search-box {
-    grid-column: 1;
-  }
-
-  .btn-search {
-    grid-column: 2;
-  }
-
-  .btn-sort {
-    grid-column: span 2;
-  }
-
   .history-card {
     padding: 16px 18px;
   }
@@ -881,6 +1068,62 @@ onBeforeUnmount(() => {
   .btn-detail,
   .btn-application {
     width: 100%;
+  }
+
+  .side-panel {
+    width: 100vw;
+    min-width: 0;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .side-close {
+    top: 12px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    font-size: 21px;
+  }
+
+  .side-logo {
+    width: 70px;
+    height: 70px;
+  }
+
+  .side-panel-inner {
+    padding: 14px 12px 10px 12px;
+  }
+
+  .side-image-layout {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .side-image-large {
+    width: 100%;
+    max-width: 100%;
+    height: 240px;
+  }
+
+  .side-image-thumbs-wrapper {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .side-image-thumbs {
+    flex-direction: row;
+    gap: 8px;
+    width: max-content;
+  }
+
+  .side-image-thumb {
+    width: 65px;
+    height: 65px;
   }
 }
 </style>
