@@ -307,7 +307,7 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import DashboardLayout from '../../components/DashboardLayout.vue';
-import { newsList } from '../../data/newsData.js';
+import { API_CONFIG } from '../../../config/api';
 
 // =======================================================
 // 1. ROUTER & ROUTE
@@ -358,7 +358,9 @@ const categoryDropdownRef = ref(null);
 // =======================================================
 // 5. COMPUTED PROPERTIES
 // =======================================================
-const isPublished = computed(() => originalStatus.value === 'published');
+const isPublished = computed(() => {
+    return originalStatus.value === 'immediate' || originalStatus.value === 'published';
+});
 
 const minDate = computed(() => {
     const today = new Date();
@@ -396,22 +398,29 @@ onBeforeUnmount(() => {
     document.removeEventListener("click", handleClickOutside);
 });
 
-const loadNewsData = () => {
+const loadNewsData = async () => {
     const newsId = parseInt(route.params.id);
+    isLoading.value = true;
 
-    setTimeout(() => {
-        const foundNews = newsList.find(n => n.id === newsId);
+    try {
+        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsId}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch announcement');
+        }
+
+        const foundNews = await response.json();
 
         if (foundNews) {
             // Load news data
-            newsForm.id = foundNews.id;
+            newsForm.id = foundNews.post_id;
             newsForm.title = foundNews.title;
-            newsForm.category = foundNews.category;
+            newsForm.category = foundNews.category || 'ประชาสัมพันธ์';
             newsForm.description = foundNews.description;
-            newsForm.status = foundNews.status || 'published';
-            originalStatus.value = foundNews.status || 'published';
+            newsForm.status = foundNews.status || 'immediate';
+            originalStatus.value = foundNews.status || 'immediate';
 
-            // ตั้งค่า publishType ตามสถานะของข่าวสาร
+            // ตั้งค่า publishType ตามสถานะ
             if (foundNews.status === 'draft') {
                 publishType.value = 'draft';
             } else if (foundNews.status === 'scheduled') {
@@ -421,15 +430,22 @@ const loadNewsData = () => {
             }
 
             // Handle date
-            const newsDate = new Date(foundNews.publishDate || foundNews.date);
-            newsForm.publishDate = newsDate.toISOString().split('T')[0];
-            newsForm.publishTime = '09:00'; // Default time
+            if (foundNews.publish_date) {
+                const publishDateTime = new Date(foundNews.publish_date);
+                newsForm.publishDate = publishDateTime.toISOString().split('T')[0];
+                newsForm.publishTime = publishDateTime.toTimeString().slice(0, 5);
+            } else if (foundNews.created_at) {
+                const createdDate = new Date(foundNews.created_at);
+                newsForm.publishDate = createdDate.toISOString().split('T')[0];
+                newsForm.publishTime = '09:00';
+            }
 
             // Load images
-            if (foundNews.images && foundNews.images.length > 0) {
-                uploadedImages.value = foundNews.images.map(img => ({
-                    preview: img,
-                    isExisting: true
+            if (foundNews.attachments && foundNews.attachments.length > 0) {
+                uploadedImages.value = foundNews.attachments.map(attachment => ({
+                    preview: `${API_CONFIG.baseURL}/uploads/news/${attachment.filename}`,
+                    isExisting: true,
+                    fileId: attachment.file_id
                 }));
             }
 
@@ -438,11 +454,14 @@ const loadNewsData = () => {
                 editor.value.innerHTML = foundNews.description;
             }
         }
-
+    } catch (error) {
+        console.error('Error loading news data:', error);
+        // แสดง error state
+        newsForm.id = null;
+    } finally {
         isLoading.value = false;
-    }, 500);
+    }
 };
-
 // =======================================================
 // 7. IMAGE HANDLING
 // =======================================================
@@ -560,25 +579,53 @@ const handleSave = async () => {
 
     isSaving.value = true;
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+        const formData = new FormData();
+        formData.append('title', newsForm.title);
+        formData.append('description', newsForm.description);
+        formData.append('category', newsForm.category);
+        
+        // Map status
+        const statusMap = {
+            'draft': 'draft',
+            'immediate': 'immediate',
+            'scheduled': 'scheduled'
+        };
+        formData.append('status', statusMap[publishType.value]);
 
-    // Prepare data to save
-    const updatedNews = {
-        ...newsForm,
-        images: uploadedImages.value.map(img => img.preview),
-        date: newsForm.publishDate
-    };
+        // เพิ่ม publish_date ถ้าเป็น scheduled
+        if (publishType.value === 'scheduled' && newsForm.publishDate) {
+            formData.append('publish_date', `${newsForm.publishDate}T${newsForm.publishTime || '00:00'}`);
+        }
 
-    console.log('Updated news:', updatedNews);
+        // เพิ่มรูปภาพใหม่
+        uploadedImages.value.forEach(img => {
+            if (img.file) {
+                formData.append('files', img.file);
+            }
+        });
 
-    isSaving.value = false;
+        const response = await fetch(
+            `${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsForm.id}`, 
+            {
+                method: 'PUT',
+                body: formData
+            }
+        );
 
-    // Show success message
-    alert('บันทึกการแก้ไขเรียบร้อยแล้ว');
+        if (!response.ok) {
+            throw new Error('Failed to update announcement');
+        }
 
-    // Navigate back
-    router.push({ name: 'TeacherManageNews' });
+        alert('บันทึกการแก้ไขเรียบร้อยแล้ว');
+        router.push({ name: 'TeacherManageNews' });
+
+    } catch (error) {
+        console.error('Error updating announcement:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่อีกครั้ง');
+    } finally {
+        isSaving.value = false;
+    }
 };
 </script>
 

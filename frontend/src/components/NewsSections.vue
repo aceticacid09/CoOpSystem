@@ -66,7 +66,7 @@ const transformAnnouncement = (announcement) => {
     description: announcement.description,
     date: announcement.created_at,
     category: "ประชาสัมพันธ์", // You might want to map this based on some criteria
-    status: announcement.status,
+    status: announcement.status, // 'draft', 'scheduled', 'immediate'
     teacher: announcement.teacher,
     // Map attachments to images array if they exist
     images: announcement.attachments?.map(att => {
@@ -106,9 +106,16 @@ const filteredNews = computed(() => {
   
   const filtered = (newsSource || []).filter(
     n => {
+      // กรองเฉพาะข่าวที่เผยแพร่แล้ว (immediate)
+      const isPublished = n.status === 'immediate';
+      
+      // ตรวจสอบหมวดหมู่
       const matchesTab = activeTab.value === "ข่าวทั้งหมด" || n.category === activeTab.value;
+      
+      // ตรวจสอบคำค้นหา
       const matchesSearch = n.title?.includes(searchText.value) || n.description?.includes(searchText.value);
-      return matchesTab && matchesSearch;
+      
+      return isPublished && matchesTab && matchesSearch;
     }
   );
   
