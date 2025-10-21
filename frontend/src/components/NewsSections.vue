@@ -28,13 +28,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import SearchBar from "../components/SearchBar.vue";
 import TabNavigation from "../components/TabNavigation.vue";
 import NewsCard from "../components/NewsCard.vue";
 import NewsSidePanel from "../components/NewSidePanel.vue";
+// import { getPublishedNews } from "../data/newsData.js";
+import { API_CONFIG } from '../../config/api'; // <- relative path to frontend/config/api.js
 
-// props เหมือนเดิม
+// props
 const props = defineProps({
   items: { type: Array, default: null },
   maxHeight: { type: String, default: null },
@@ -43,9 +45,7 @@ const props = defineProps({
   initialSaved: { type: Array, default: () => [] }
 });
 
-import { getPublishedNews } from "../data/newsData.js";
-
-// state เหมือนเดิม
+// tabs/state
 const tabs = ["ข่าวทั้งหมด", "ประชาสัมพันธ์", "ข่าวด่วน", "กิจกรรม", "ประกาศผลการคัดเลือก"];
 const activeTab = ref(tabs[0]);
 const searchText = ref("");
@@ -54,45 +54,82 @@ const selectedNews = ref(null);
 const bookmarkedNews = ref(new Set(props.initialBookmarked));
 const savedNews = ref(new Set(props.initialSaved));
 
-// computed เหมือนเดิม
-const filteredNews = computed(() => {
-  // ใช้ข่าวที่ published เท่านั้น
-  const newsSource = props.items || getPublishedNews();
+// local fetched items + loading/error
+const itemsState = ref(null);
+const isLoading = ref(false);
+const fetchError = ref(null);
+
+const transformAnnouncement = (announcement) => {
+  return {
+    id: announcement.post_id,
+    title: announcement.title,
+    description: announcement.description,
+    date: announcement.created_at,
+    category: "ประชาสัมพันธ์", // You might want to map this based on some criteria
+    status: announcement.status,
+    teacher: announcement.teacher,
+    // Map attachments to images array if they exist
+    images: announcement.attachments?.map(att => `/uploads/news/${att.filename}`) || []
+  };
+};
+
+// Modify the onMounted function
+onMounted(async () => {
+  if (props.items) return;
   
-  let filtered = newsSource.filter(
-    n =>
-      (activeTab.value === "ข่าวทั้งหมด" || n.category === activeTab.value) &&
-      (n.title.includes(searchText.value) || n.description.includes(searchText.value))
+  isLoading.value = true;
+  try {
+    console.log('Fetching from:', `${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`);
+    const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`);
+    if (!res.ok) throw new Error(`Failed to fetch announcements: ${res.status}`);
+    
+    const data = await res.json();
+    console.log('API Response:', data);
+    
+    // Transform the announcements data to match expected format
+    const transformedAnnouncements = data.announcements.map(transformAnnouncement);
+    itemsState.value = transformedAnnouncements;
+    
+    console.log('Processed items:', itemsState.value);
+  } catch (err) {
+    console.error("Failed to load announcements:", err);
+    fetchError.value = err;
+  } finally {
+    isLoading.value = false;
+  }
+});
+
+const filteredNews = computed(() => {
+  const newsSource = props.items || itemsState.value;
+  console.log('News source:', newsSource); // Debug source data
+  
+  const filtered = (newsSource || []).filter(
+    n => {
+      const matchesTab = activeTab.value === "ข่าวทั้งหมด" || n.category === activeTab.value;
+      const matchesSearch = n.title?.includes(searchText.value) || n.description?.includes(searchText.value);
+      return matchesTab && matchesSearch;
+    }
   );
+  
+  console.log('Filtered results:', filtered); // Debug filtered results
   return isAscending.value ? filtered : filtered.slice().reverse();
 });
 
-// methods เหมือนเดิม
 const toggleSort = () => (isAscending.value = !isAscending.value);
-const openModal = (item) => {
-  selectedNews.value = { ...item };
-};
+const openModal = (item) => { selectedNews.value = { ...item }; };
 const closeModal = () => (selectedNews.value = null);
 
 const toggleBookmark = (newsId) => {
-  if (bookmarkedNews.value.has(newsId)) {
-    bookmarkedNews.value.delete(newsId);
-  } else {
-    bookmarkedNews.value.add(newsId);
-  }
+  if (bookmarkedNews.value.has(newsId)) bookmarkedNews.value.delete(newsId);
+  else bookmarkedNews.value.add(newsId);
   bookmarkedNews.value = new Set(bookmarkedNews.value);
 };
 
-const isBookmarked = (newsId) => {
-  return bookmarkedNews.value.has(newsId);
-};
+const isBookmarked = (newsId) => bookmarkedNews.value.has(newsId);
 
 const toggleSaveNews = (newsId) => {
-  if (savedNews.value.has(newsId)) {
-    savedNews.value.delete(newsId);
-  } else {
-    savedNews.value.add(newsId);
-  }
+  if (savedNews.value.has(newsId)) savedNews.value.delete(newsId);
+  else savedNews.value.add(newsId);
   savedNews.value = new Set(savedNews.value);
 };
 
