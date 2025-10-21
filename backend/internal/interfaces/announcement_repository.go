@@ -1,3 +1,4 @@
+// ../internal/interfaces/announcement_repository.go
 package interfaces
 
 import (

@@ -1,3 +1,4 @@
+// ../internal/routes/announcement_routes.go
 package routes
 
 import (

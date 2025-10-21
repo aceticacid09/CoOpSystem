@@ -1,3 +1,4 @@
+// ../internal/models/announ_news.go
 package models
 
 import "time"
@@ -7,14 +8,14 @@ type AnnouncementStatus string
 const (
 	StatusDraft     AnnouncementStatus = "draft"
 	StatusImmediate AnnouncementStatus = "immediate"
-	StatusScheduled  AnnouncementStatus = "scheduled"
+	StatusScheduled AnnouncementStatus = "scheduled"
 )
 
 // Announcement represents the Announ_News table
 type Announcement struct {
 	PostID       int                `db:"post_id" json:"post_id"`
 	Title        string             `db:"title" json:"title"`
-	Categories   string             `db:"categories" json:"categories,omitempty"`
+	Categories   *string            `db:"categories" json:"categories,omitempty"`
 	Description  *string            `db:"description" json:"description,omitempty"`
 	AttachmentID *int               `db:"attachment_id" json:"attachment_id,omitempty"`
 	Status       AnnouncementStatus `db:"status" json:"status"`
@@ -50,6 +51,7 @@ type TeacherInfo struct {
 // CreateAnnouncementRequest for creating new announcements
 type CreateAnnouncementRequest struct {
 	Title       string              `json:"title" binding:"required"`
+	Categories  *string             `json:"categories"`
 	Description *string             `json:"description"`
 	TeacherID   *int                `json:"teacher_id"`
 	Status      *AnnouncementStatus `json:"status"`
@@ -58,6 +60,7 @@ type CreateAnnouncementRequest struct {
 // UpdateAnnouncementRequest for updating announcements
 type UpdateAnnouncementRequest struct {
 	Title       *string             `json:"title"`
+	Categories  *string             `json:"categories"`
 	Description *string             `json:"description"`
 	TeacherID   *int                `json:"teacher_id"`
 	Status      *AnnouncementStatus `json:"status"`
