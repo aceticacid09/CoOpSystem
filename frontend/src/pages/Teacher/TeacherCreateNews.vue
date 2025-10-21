@@ -360,7 +360,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="section-card confirmation-card">
                     <h3 style="text-align: center;">ยืนยันการประกาศข่าวสาร</h3>
                     <p class="confirmation-text">
@@ -599,49 +599,54 @@ watch(publishType, (newType) => {
 });
 
 const createAnnouncement = async () => {
-  try {
-    // Map frontend status values to backend ENUM values
-    const statusMap = {
-      'draft': 'draft',
-      'immediate': 'immediate',
-      'scheduled': 'scheduled'
-    };
+    try {
+        // Map frontend status values to backend ENUM values
+        const statusMap = {
+            'draft': 'draft',
+            'immediate': 'immediate',
+            'scheduled': 'scheduled'
+        };
+        const formData = new FormData();
+        formData.append('title', newsForm.title);
+        formData.append('description', newsForm.description);
+        formData.append('status', statusMap[publishType.value]);
 
-    const formData = new FormData();
-    formData.append('title', newsForm.title);
-    formData.append('description', newsForm.description);
-    formData.append('status', statusMap[publishType.value]); // Use the mapped status
-    formData.append('category', newsForm.category);
+        // ✅ แก้ไข: ส่ง newsForm.category แทน categories
+        formData.append('categories', newsForm.category || 'ประชาสัมพันธ์');
 
-    if (publishType.value === 'scheduled') {
-      formData.append('publish_date', `${newsForm.publishDate}T${newsForm.publishTime}`);
+        if (publishType.value === 'scheduled') {
+            formData.append('publish_date', `${newsForm.publishDate}T${newsForm.publishTime}`);
+        }
+
+        // Debug logs
+        console.log('Sending data:', {
+            status: statusMap[publishType.value],
+            category: newsForm.category,
+            title: newsForm.title
+        });
+
+        uploadedImages.value.forEach(img => {
+            if (img.file) formData.append('files', img.file);
+        });
+
+        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Server error:', errorData);
+            throw new Error(`Failed to create announcement: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Announcement created successfully:', data);
+        return data;
+    } catch (error) {
+        console.error('Error creating announcement:', error);
+        throw error;
     }
-
-    // Debug log to verify the status being sent
-    console.log('Sending status:', statusMap[publishType.value]);
-
-    uploadedImages.value.forEach(img => {
-      if (img.file) formData.append('files', img.file);
-    });
-
-    const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`, {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Server error:', errorData);
-      throw new Error(`Failed to create announcement: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Announcement created:', data);
-    return data;
-  } catch (error) {
-    console.error('Error creating announcement:', error);
-    throw error;
-  }
 };
 
 
@@ -654,28 +659,28 @@ const goBack = () => {
 };
 
 const nextStep = async () => {
-  if (currentStep.value === 1 && !isStep1Valid.value) {
-    alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
-    return;
-  }
-
-  if (currentStep.value === 2) {
-    try {
-      // Show loading state if needed
-      const result = await createAnnouncement();
-      if (result) {
-        currentStep.value = 3;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    } catch (error) {
-      alert('เกิดข้อผิดพลาดในการสร้างข่าวสาร กรุณาลองใหม่อีกครั้ง');
-      console.error('Error:', error);
-      return;
+    if (currentStep.value === 1 && !isStep1Valid.value) {
+        alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
+        return;
     }
-  } else if (currentStep.value < 3) {
-    currentStep.value++;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+
+    if (currentStep.value === 2) {
+        try {
+            // Show loading state if needed
+            const result = await createAnnouncement();
+            if (result) {
+                currentStep.value = 3;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch (error) {
+            alert('เกิดข้อผิดพลาดในการสร้างข่าวสาร กรุณาลองใหม่อีกครั้ง');
+            console.error('Error:', error);
+            return;
+        }
+    } else if (currentStep.value < 3) {
+        currentStep.value++;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 };
 
 const prevStep = () => {
@@ -715,46 +720,46 @@ const createAnotherNews = () => {
 
 // โหลดข้อมูลแบบร่าง
 const loadDraftNews = async () => {
-  try {
-    const draftId = route.query.draftId;
-    const encodedData = route.query.data;
-    
-    if (draftId && encodedData) {
-      const decodedData = JSON.parse(decodeURIComponent(encodedData));
-      
-      // Consistently map the data fields
-      newsForm.title = decodedData.title || '';
-      newsForm.category = decodedData.category || '';
-      newsForm.description = decodedData.description || '';
-      
-      // Set publish type based on status
-      publishType.value = decodedData.status || 'draft';
-      
-      // Handle scheduled date if exists
-      if (decodedData.publish_date) {
-        const publishDateTime = new Date(decodedData.publish_date);
-        newsForm.publishDate = publishDateTime.toISOString().split('T')[0];
-        newsForm.publishTime = publishDateTime.toTimeString().slice(0,5);
-      }
-      
-      // Load images if they exist
-      if (decodedData.attachments && decodedData.attachments.length > 0) {
-        uploadedImages.value = decodedData.attachments.map(attachment => ({
-          preview: `${API_CONFIG.baseURL}/uploads/news/${attachment.filename}`,
-          isExisting: true,
-          fileId: attachment.file_id
-        }));
-      }
-      
-      // Load content into editor
-      if (editor.value && decodedData.description) {
-        editor.value.innerHTML = decodedData.description;
-      }
+    try {
+        const draftId = route.query.draftId;
+        const encodedData = route.query.data;
+
+        if (draftId && encodedData) {
+            const decodedData = JSON.parse(decodeURIComponent(encodedData));
+
+            // Consistently map the data fields
+            newsForm.title = decodedData.title || '';
+            newsForm.category = decodedData.category || '';
+            newsForm.description = decodedData.description || '';
+
+            // Set publish type based on status
+            publishType.value = decodedData.status || 'draft';
+
+            // Handle scheduled date if exists
+            if (decodedData.publish_date) {
+                const publishDateTime = new Date(decodedData.publish_date);
+                newsForm.publishDate = publishDateTime.toISOString().split('T')[0];
+                newsForm.publishTime = publishDateTime.toTimeString().slice(0, 5);
+            }
+
+            // Load images if they exist
+            if (decodedData.attachments && decodedData.attachments.length > 0) {
+                uploadedImages.value = decodedData.attachments.map(attachment => ({
+                    preview: `${API_CONFIG.baseURL}/uploads/news/${attachment.filename}`,
+                    isExisting: true,
+                    fileId: attachment.file_id
+                }));
+            }
+
+            // Load content into editor
+            if (editor.value && decodedData.description) {
+                editor.value.innerHTML = decodedData.description;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading draft news:', error);
+        alert('เกิดข้อผิดพลาดในการโหลดข้อมูลข่าวสาร');
     }
-  } catch (error) {
-    console.error('Error loading draft news:', error);
-    alert('เกิดข้อผิดพลาดในการโหลดข้อมูลข่าวสาร');
-  }
 };
 
 // B. Image Handling
@@ -890,7 +895,7 @@ onMounted(() => {
     if (editor.value) {
         newsForm.description = editor.value.innerHTML;
     }
-    
+
     // Load draft/edit data if available
     loadDraftNews();
 });

@@ -309,8 +309,8 @@
                 </button>
             </div>
 
-            <NewsSidePanel v-if="selectedNewsDetail" :news="selectedNewsDetail" :show-status="true"
-                @close="closeSidePanel">
+            <NewsSidePanel v-if="selectedNewsDetail" :news="selectedNewsDetail" :show-actions="false"
+                :show-status="true" @close="closeSidePanel">
                 <template #actions>
                     <div class="side-action-buttons">
                         <button class="btn-side-action btn-edit" @click="editNews(selectedNewsDetail)">
@@ -405,6 +405,7 @@ const showDeleteConfirm = ref(false);
 const newsToDelete = ref(null);
 
 // Data
+// const mockNewsData = ref(getPublishableNews());
 const announcements = ref([]);
 const fetchAnnouncements = async () => {
   isLoading.value = true;
@@ -412,17 +413,28 @@ const fetchAnnouncements = async () => {
     const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`);
     if (!res.ok) throw new Error('Failed to fetch announcements');
     const data = await res.json();
+    
+    // Debug: Log the first announcement to check structure
+    if (data.announcements.length > 0) {
+      console.log('First announcement:', data.announcements[0]);
+      console.log('Attachments:', data.announcements[0].attachments);
+    }
+    
     announcements.value = data.announcements.map(announcement => ({
       id: announcement.post_id,
-      post_id: announcement.post_id, // Add this line
+      post_id: announcement.post_id,
       title: announcement.title,
       description: announcement.description,
       status: announcement.status,
       date: announcement.created_at,
       publishDate: announcement.publish_date,
-      category: "ประชาสัมพันธ์", // Map category if needed
+      category: "ประชาสัมพันธ์",
       teacher: announcement.teacher,
-      images: announcement.attachments?.map(att => `/uploads/news/${att.filename}`) || []
+      // Extract filename from storage_path: "/app/uploads/news/1761058422_Project-er.png" -> "1761058422_Project-er.png"
+      images: announcement.attachments?.map(att => {
+        const filename = att.storage_path ? att.storage_path.split('/').pop() : att.file_name;
+        return `${API_CONFIG.baseURL}/uploads/news/${filename}`;
+      }).filter(url => !url.endsWith('undefined')) || []
     }));
   } catch (error) {
     console.error('Error fetching announcements:', error);
@@ -560,6 +572,13 @@ const visiblePages = computed(() => {
     );
 });
 
+const hasActiveFilters = computed(() =>
+    statusFilter.value !== 'ทั้งหมด' ||
+    dateFrom.value ||
+    dateTo.value ||
+    searchText.value
+);
+
 const canBulkPublish = computed(() => {
     if (selectedNews.value.length === 0) return false;
     return selectedNews.value.some(id => {
@@ -572,21 +591,19 @@ const canBulkPublish = computed(() => {
 // 3. METHODS & FUNCTIONS
 // =====================================
 
-
 const updateScheduledNews = () => {
-    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     let updated = false;
 
     announcements.value = announcements.value.map(news => {
-        if (news.status === 'scheduled' && news.publishDate) {
-            const scheduleDateTime = new Date(news.publishDate);
-            
-            // เปลี่ยนสถานะเป็น immediate เมื่อถึงเวลาที่กำหนด
-            if (scheduleDateTime <= now) {
-                updated = true;
-                return { ...news, status: 'immediate' };
-            }
+        const newsDate = new Date(news.publishDate || news.date);
+        newsDate.setHours(0, 0, 0, 0);
+
+        if (news.status === 'scheduled' && newsDate <= today) {
+            updated = true;
+            return { ...news, status: 'published' };
         }
         return news;
     });
@@ -662,6 +679,13 @@ const clearDateFilter = () => {
     dateFrom.value = '';
     dateTo.value = '';
 };
+
+const clearAllFilters = () => {
+    searchText.value = '';
+    statusFilter.value = 'ทั้งหมด';
+    clearDateFilter();
+};
+
 const toggleSelectAll = () => {
     if (selectAll.value) {
         selectedNews.value = paginatedNews.value.map(news => news.id);
@@ -680,35 +704,44 @@ const closeSidePanel = () => {
 };
 
 const editNews = async (news) => {
-  try {
-    // First fetch the full announcement details
-    const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${news.id}`);
-    if (!response.ok) throw new Error('Failed to fetch announcement details');
-    
-    const fullNews = await response.json();
-    
-    // Use the same route and data structure for both new and existing posts
-    router.push({
-      name: 'TeacherCreateNews',
-      query: { 
-        draftId: news.post_id,
-        data: encodeURIComponent(JSON.stringify({
-          post_id: fullNews.post_id,
-          title: fullNews.title,
-          description: fullNews.description,
-          category: fullNews.category,
-          status: fullNews.status,
-          publish_date: fullNews.publish_date,
-          attachments: fullNews.attachments || []
-        }))
-      }
-    });
-    
-    closeSidePanel();
-  } catch (error) {
-    console.error('Error preparing to edit announcement:', error);
-    alert('ไม่สามารถแก้ไขข่าวสารได้ กรุณาลองใหม่อีกครั้ง');
-  }
+    try {
+        // Fetch full announcement details
+        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${news.id}`);
+        if (!response.ok) throw new Error('Failed to fetch announcement details');
+
+        const fullNews = await response.json();
+
+        // ตรวจสอบสถานะเพื่อเลือกหน้าที่เหมาะสม
+        if (fullNews.status === 'draft') {
+            // แบบร่าง → ไปหน้า Create (เพื่อแก้ไขต่อ)
+            router.push({
+                name: 'TeacherCreateNews',
+                query: {
+                    draftId: news.post_id,
+                    data: encodeURIComponent(JSON.stringify({
+                        post_id: fullNews.post_id,
+                        title: fullNews.title,
+                        description: fullNews.description,
+                        category: fullNews.category,
+                        status: fullNews.status,
+                        publish_date: fullNews.publish_date,
+                        attachments: fullNews.attachments || []
+                    }))
+                }
+            });
+        } else {
+            // เผยแพร่แล้ว หรือ รอเผยแพร่ → ไปหน้า Edit
+            router.push({
+                name: 'TeacherEditNews',
+                params: { id: news.id }
+            });
+        }
+
+        closeSidePanel();
+    } catch (error) {
+        console.error('Error preparing to edit announcement:', error);
+        alert('ไม่สามารถแก้ไขข่าวสารได้ กรุณาลองใหม่อีกครั้ง');
+    }
 };
 
 const confirmDelete = (news) => {
@@ -720,63 +753,63 @@ const confirmDelete = (news) => {
 };
 
 const executeDelete = async () => {
-    try {
-        if (newsToDelete.value) {
-            const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsToDelete.value.id}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) throw new Error('Failed to delete announcement');
-
-            await fetchAnnouncements(); // Refresh the list
-        } else if (selectedNews.value.length > 0) {
-            // Bulk delete
-            await Promise.all(selectedNews.value.map(id =>
-                fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
-                    method: 'DELETE'
-                })
-            ));
-
-            await fetchAnnouncements(); // Refresh the list
-            selectedNews.value = [];
-            selectAll.value = false;
-        }
-
-        showDeleteConfirm.value = false;
-        newsToDelete.value = null;
-    } catch (error) {
-        console.error('Error deleting announcement(s):', error);
-        // Add error handling UI feedback here
+  try {
+    if (newsToDelete.value) {
+      const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsToDelete.value.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete announcement');
+      
+      await fetchAnnouncements(); // Refresh the list
+    } else if (selectedNews.value.length > 0) {
+      // Bulk delete
+      await Promise.all(selectedNews.value.map(id => 
+        fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
+          method: 'DELETE'
+        })
+      ));
+      
+      await fetchAnnouncements(); // Refresh the list
+      selectedNews.value = [];
+      selectAll.value = false;
     }
+
+    showDeleteConfirm.value = false;
+    newsToDelete.value = null;
+  } catch (error) {
+    console.error('Error deleting announcement(s):', error);
+    // Add error handling UI feedback here
+  }
 };
 
 const bulkPublish = async () => {
-    try {
-        await Promise.all(selectedNews.value.map(async (id) => {
-            const news = announcements.value.find(n => n.id === id);
-            if (news && news.status === 'scheduled') {
-                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        status: 'published',
-                        publish_date: new Date().toISOString()
-                    })
-                });
+  try {
+    await Promise.all(selectedNews.value.map(async (id) => {
+      const news = announcements.value.find(n => n.id === id);
+      if (news && news.status === 'scheduled') {
+        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'published',
+            publish_date: new Date().toISOString()
+          })
+        });
+        
+        if (!response.ok) throw new Error(`Failed to publish announcement ${id}`);
+      }
+    }));
 
-                if (!response.ok) throw new Error(`Failed to publish announcement ${id}`);
-            }
-        }));
-
-        await fetchAnnouncements(); // Refresh the list
-        selectedNews.value = [];
-        selectAll.value = false;
-    } catch (error) {
-        console.error('Error publishing announcements:', error);
-        // Add error handling UI feedback here
-    }
+    await fetchAnnouncements(); // Refresh the list
+    selectedNews.value = [];
+    selectAll.value = false;
+  } catch (error) {
+    console.error('Error publishing announcements:', error);
+    // Add error handling UI feedback here
+  }
 };
 
 const bulkDelete = () => {
@@ -809,12 +842,12 @@ watch(paginatedNews, () => {
 
 // In the same file
 onMounted(async () => {
-    document.addEventListener('click', handleClickOutside);
-    await fetchAnnouncements();
-
-    // Update scheduled announcements periodically
-    updateScheduledNews();
-    statusCheckInterval = setInterval(updateScheduledNews, 60000);
+  document.addEventListener('click', handleClickOutside);
+  await fetchAnnouncements();
+  
+  // Update scheduled announcements periodically
+  updateScheduledNews();
+  statusCheckInterval = setInterval(updateScheduledNews, 60000);
 });
 
 onBeforeUnmount(() => {
@@ -1857,50 +1890,5 @@ onBeforeUnmount(() => {
         height: 36px;
         font-size: 13px;
     }
-}
-
-/* Status Badge Styling */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.status-badge.immediate {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.status-badge.scheduled {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-badge.draft {
-    background: #f3f4f6;
-    color: #4b5563;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.status-badge.immediate .status-dot {
-    background: #10b981;
-}
-
-.status-badge.scheduled .status-dot {
-    background: #f59e0b;
-}
-
-.status-badge.draft .status-dot {
-    background: #6b7280;
 }
 </style>

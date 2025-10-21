@@ -412,10 +412,12 @@ const loadNewsData = async () => {
         const foundNews = await response.json();
 
         if (foundNews) {
-            // Load news data
             newsForm.id = foundNews.post_id;
             newsForm.title = foundNews.title;
-            newsForm.category = foundNews.category || 'ประชาสัมพันธ์';
+            
+            // ✅ แก้ไข: รองรับทั้ง categories และ category
+            newsForm.category = foundNews.categories || foundNews.category || 'ประชาสัมพันธ์';
+            
             newsForm.description = foundNews.description;
             newsForm.status = foundNews.status || 'immediate';
             originalStatus.value = foundNews.status || 'immediate';
@@ -442,11 +444,18 @@ const loadNewsData = async () => {
 
             // Load images
             if (foundNews.attachments && foundNews.attachments.length > 0) {
-                uploadedImages.value = foundNews.attachments.map(attachment => ({
-                    preview: `${API_CONFIG.baseURL}/uploads/news/${attachment.filename}`,
-                    isExisting: true,
-                    fileId: attachment.file_id
-                }));
+                uploadedImages.value = foundNews.attachments.map(attachment => {
+                    // Extract filename from storage_path or use filename directly
+                    const filename = attachment.storage_path 
+                        ? attachment.storage_path.split('/').pop() 
+                        : attachment.filename || attachment.file_name;
+                    
+                    return {
+                        preview: `${API_CONFIG.baseURL}/uploads/news/${filename}`,
+                        isExisting: true,
+                        fileId: attachment.file_id
+                    };
+                });
             }
 
             // Load description into editor
@@ -581,29 +590,51 @@ const handleSave = async () => {
 
     try {
         const formData = new FormData();
-        formData.append('title', newsForm.title);
-        formData.append('description', newsForm.description);
-        formData.append('category', newsForm.category);
+        formData.append('title', newsForm.title.trim());
+        formData.append('description', newsForm.description.trim());
+        formData.append('categories', newsForm.category || 'ประชาสัมพันธ์');
         
-        // Map status
+        // ✅ แก้ไข: Map status ให้ถูกต้อง
         const statusMap = {
             'draft': 'draft',
-            'immediate': 'immediate',
+            'immediate': 'immediate',  // Backend ใช้ 'immediate' ไม่ใช่ 'published'
             'scheduled': 'scheduled'
         };
-        formData.append('status', statusMap[publishType.value]);
+        const finalStatus = statusMap[publishType.value] || 'immediate';
+        formData.append('status', finalStatus);
 
-        // เพิ่ม publish_date ถ้าเป็น scheduled
-        if (publishType.value === 'scheduled' && newsForm.publishDate) {
-            formData.append('publish_date', `${newsForm.publishDate}T${newsForm.publishTime || '00:00'}`);
+        // ✅ เพิ่ม: จัดการวันที่ให้ถูกต้องทุกกรณี
+        if (publishType.value === 'scheduled' && newsForm.publishDate && newsForm.publishTime) {
+            formData.append('publish_date', `${newsForm.publishDate}T${newsForm.publishTime}:00`);
+        } else if (publishType.value === 'immediate') {
+            // ส่งวันที่ปัจจุบันถ้าเป็นประกาศทันที
+            const now = new Date();
+            formData.append('publish_date', now.toISOString());
         }
 
-        // เพิ่มรูปภาพใหม่
+        // ✅ แก้ไข: ส่ง file_id ของรูปเดิมที่ต้องการเก็บไว้
+        const existingFileIds = uploadedImages.value
+            .filter(img => img.isExisting && img.fileId)
+            .map(img => img.fileId);
+        
+        if (existingFileIds.length > 0) {
+            formData.append('existing_files', JSON.stringify(existingFileIds));
+        }
+
+        // เพิ่มรูปใหม่
         uploadedImages.value.forEach(img => {
-            if (img.file) {
+            if (img.file && !img.isExisting) {
                 formData.append('files', img.file);
             }
         });
+
+        // Debug logs
+        console.log('=== Update Data ===');
+        console.log('Title:', newsForm.title);
+        console.log('Category:', newsForm.category);
+        console.log('Status:', finalStatus);
+        console.log('Existing files:', existingFileIds);
+        console.log('New files:', uploadedImages.value.filter(img => img.file && !img.isExisting).length);
 
         const response = await fetch(
             `${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsForm.id}`, 
@@ -614,15 +645,20 @@ const handleSave = async () => {
         );
 
         if (!response.ok) {
-            throw new Error('Failed to update announcement');
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Server error:', errorData);
+            throw new Error(errorData.message || `HTTP ${response.status}: Failed to update announcement`);
         }
+
+        const result = await response.json();
+        console.log('Update successful:', result);
 
         alert('บันทึกการแก้ไขเรียบร้อยแล้ว');
         router.push({ name: 'TeacherManageNews' });
 
     } catch (error) {
         console.error('Error updating announcement:', error);
-        alert('เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่อีกครั้ง');
+        alert(`เกิดข้อผิดพลาดในการบันทึก: ${error.message}\nกรุณาลองใหม่อีกครั้ง`);
     } finally {
         isSaving.value = false;
     }

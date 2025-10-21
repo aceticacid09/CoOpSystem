@@ -65,10 +65,12 @@ const transformAnnouncement = (announcement) => {
     title: announcement.title,
     description: announcement.description,
     date: announcement.created_at,
-    category: "ประชาสัมพันธ์", // You might want to map this based on some criteria
-    status: announcement.status, // 'draft', 'scheduled', 'immediate'
+    
+    // ✅ แก้ไข: รองรับทั้ง categories และ category
+    category: announcement.categories || announcement.category || "ประชาสัมพันธ์",
+    
+    status: announcement.status,
     teacher: announcement.teacher,
-    // Map attachments to images array if they exist
     images: announcement.attachments?.map(att => {
         const filename = att.storage_path ? att.storage_path.split('/').pop() : att.file_name;
         return `${API_CONFIG.baseURL}/uploads/news/${filename}`;
