@@ -309,8 +309,8 @@
                 </button>
             </div>
 
-            <NewsSidePanel v-if="selectedNewsDetail" :news="selectedNewsDetail" :show-actions="false"
-                :show-status="true" @close="closeSidePanel">
+            <NewsSidePanel v-if="selectedNewsDetail" :news="selectedNewsDetail" :show-status="true"
+                @close="closeSidePanel">
                 <template #actions>
                     <div class="side-action-buttons">
                         <button class="btn-side-action btn-edit" @click="editNews(selectedNewsDetail)">
@@ -405,7 +405,6 @@ const showDeleteConfirm = ref(false);
 const newsToDelete = ref(null);
 
 // Data
-// const mockNewsData = ref(getPublishableNews());
 const announcements = ref([]);
 const fetchAnnouncements = async () => {
   isLoading.value = true;
@@ -572,13 +571,6 @@ const visiblePages = computed(() => {
     );
 });
 
-const hasActiveFilters = computed(() =>
-    statusFilter.value !== 'ทั้งหมด' ||
-    dateFrom.value ||
-    dateTo.value ||
-    searchText.value
-);
-
 const canBulkPublish = computed(() => {
     if (selectedNews.value.length === 0) return false;
     return selectedNews.value.some(id => {
@@ -591,19 +583,21 @@ const canBulkPublish = computed(() => {
 // 3. METHODS & FUNCTIONS
 // =====================================
 
+
 const updateScheduledNews = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
 
     let updated = false;
 
     announcements.value = announcements.value.map(news => {
-        const newsDate = new Date(news.publishDate || news.date);
-        newsDate.setHours(0, 0, 0, 0);
-
-        if (news.status === 'scheduled' && newsDate <= today) {
-            updated = true;
-            return { ...news, status: 'published' };
+        if (news.status === 'scheduled' && news.publishDate) {
+            const scheduleDateTime = new Date(news.publishDate);
+            
+            // เปลี่ยนสถานะเป็น immediate เมื่อถึงเวลาที่กำหนด
+            if (scheduleDateTime <= now) {
+                updated = true;
+                return { ...news, status: 'immediate' };
+            }
         }
         return news;
     });
@@ -679,13 +673,6 @@ const clearDateFilter = () => {
     dateFrom.value = '';
     dateTo.value = '';
 };
-
-const clearAllFilters = () => {
-    searchText.value = '';
-    statusFilter.value = 'ทั้งหมด';
-    clearDateFilter();
-};
-
 const toggleSelectAll = () => {
     if (selectAll.value) {
         selectedNews.value = paginatedNews.value.map(news => news.id);
@@ -753,63 +740,63 @@ const confirmDelete = (news) => {
 };
 
 const executeDelete = async () => {
-  try {
-    if (newsToDelete.value) {
-      const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsToDelete.value.id}`, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete announcement');
-      
-      await fetchAnnouncements(); // Refresh the list
-    } else if (selectedNews.value.length > 0) {
-      // Bulk delete
-      await Promise.all(selectedNews.value.map(id => 
-        fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
-          method: 'DELETE'
-        })
-      ));
-      
-      await fetchAnnouncements(); // Refresh the list
-      selectedNews.value = [];
-      selectAll.value = false;
-    }
+    try {
+        if (newsToDelete.value) {
+            const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsToDelete.value.id}`, {
+                method: 'DELETE'
+            });
 
-    showDeleteConfirm.value = false;
-    newsToDelete.value = null;
-  } catch (error) {
-    console.error('Error deleting announcement(s):', error);
-    // Add error handling UI feedback here
-  }
+            if (!response.ok) throw new Error('Failed to delete announcement');
+
+            await fetchAnnouncements(); // Refresh the list
+        } else if (selectedNews.value.length > 0) {
+            // Bulk delete
+            await Promise.all(selectedNews.value.map(id =>
+                fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
+                    method: 'DELETE'
+                })
+            ));
+
+            await fetchAnnouncements(); // Refresh the list
+            selectedNews.value = [];
+            selectAll.value = false;
+        }
+
+        showDeleteConfirm.value = false;
+        newsToDelete.value = null;
+    } catch (error) {
+        console.error('Error deleting announcement(s):', error);
+        // Add error handling UI feedback here
+    }
 };
 
 const bulkPublish = async () => {
-  try {
-    await Promise.all(selectedNews.value.map(async (id) => {
-      const news = announcements.value.find(n => n.id === id);
-      if (news && news.status === 'scheduled') {
-        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            status: 'published',
-            publish_date: new Date().toISOString()
-          })
-        });
-        
-        if (!response.ok) throw new Error(`Failed to publish announcement ${id}`);
-      }
-    }));
+    try {
+        await Promise.all(selectedNews.value.map(async (id) => {
+            const news = announcements.value.find(n => n.id === id);
+            if (news && news.status === 'scheduled') {
+                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: 'published',
+                        publish_date: new Date().toISOString()
+                    })
+                });
 
-    await fetchAnnouncements(); // Refresh the list
-    selectedNews.value = [];
-    selectAll.value = false;
-  } catch (error) {
-    console.error('Error publishing announcements:', error);
-    // Add error handling UI feedback here
-  }
+                if (!response.ok) throw new Error(`Failed to publish announcement ${id}`);
+            }
+        }));
+
+        await fetchAnnouncements(); // Refresh the list
+        selectedNews.value = [];
+        selectAll.value = false;
+    } catch (error) {
+        console.error('Error publishing announcements:', error);
+        // Add error handling UI feedback here
+    }
 };
 
 const bulkDelete = () => {
@@ -842,12 +829,12 @@ watch(paginatedNews, () => {
 
 // In the same file
 onMounted(async () => {
-  document.addEventListener('click', handleClickOutside);
-  await fetchAnnouncements();
-  
-  // Update scheduled announcements periodically
-  updateScheduledNews();
-  statusCheckInterval = setInterval(updateScheduledNews, 60000);
+    document.addEventListener('click', handleClickOutside);
+    await fetchAnnouncements();
+
+    // Update scheduled announcements periodically
+    updateScheduledNews();
+    statusCheckInterval = setInterval(updateScheduledNews, 60000);
 });
 
 onBeforeUnmount(() => {
@@ -1890,5 +1877,50 @@ onBeforeUnmount(() => {
         height: 36px;
         font-size: 13px;
     }
+}
+
+/* Status Badge Styling */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge.immediate {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.scheduled {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.draft {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-badge.immediate .status-dot {
+    background: #10b981;
+}
+
+.status-badge.scheduled .status-dot {
+    background: #f59e0b;
+}
+
+.status-badge.draft .status-dot {
+    background: #6b7280;
 }
 </style>
