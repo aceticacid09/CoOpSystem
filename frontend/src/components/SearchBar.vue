@@ -7,19 +7,11 @@
         <circle cx="11" cy="11" r="8"></circle>
         <path d="m21 21-4.35-4.35"></path>
       </svg>
-      <input 
-        type="text" 
-        :value="modelValue" 
-        @input="$emit('update:modelValue', $event.target.value)"
-        :placeholder="placeholder" 
-      />
+      <input type="text" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)"
+        :placeholder="placeholder" />
     </div>
     <button class="btn-search" @click="$emit('search')">ค้นหา</button>
-    <button 
-      @click="$emit('toggle-sort')" 
-      class="btn-sort" 
-      :title="isAscending ? 'เรียงจากเก่าสุด' : 'เรียงจากใหม่สุด'"
-    >
+    <button @click="$emit('toggle-sort')" class="btn-sort" :title="isAscending ? 'เรียงจากเก่าสุด' : 'เรียงจากใหม่สุด'">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="#9CA3AF" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 6h18M3 12h12M3 18h6" />
@@ -131,7 +123,7 @@ defineEmits(['update:modelValue', 'search', 'toggle-sort']);
   .search-sort {
     margin: 20px 0;
   }
-  
+
   .search-box {
     min-width: 200px;
   }

@@ -5,30 +5,16 @@
     <div class="custom-dropdown" ref="dropdownRef" @click="toggleDropdown">
       <div class="dropdown-selected">
         <span>{{ modelValue }}</span>
-        <svg 
-          class="dropdown-arrow" 
-          :class="{ open: isOpen }" 
-          xmlns="http://www.w3.org/2000/svg"
-          width="16" 
-          height="16" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="#9CA3AF" 
-          stroke-width="2"
-          stroke-linecap="round" 
-          stroke-linejoin="round"
-        >
+        <svg class="dropdown-arrow" :class="{ open: isOpen }" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+          viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       </div>
       <transition name="dropdown-fade">
         <ul v-if="isOpen" class="dropdown-menu">
-          <li 
-            v-for="option in options" 
-            :key="option" 
-            @click.stop="selectOption(option)"
-            :class="{ selected: modelValue === option }"
-          >
+          <li v-for="option in options" :key="option" @click.stop="selectOption(option)"
+            :class="{ selected: modelValue === option }">
             {{ option }}
           </li>
         </ul>

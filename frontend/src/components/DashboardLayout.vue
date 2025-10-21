@@ -149,7 +149,8 @@ const menus = {
       icon: icons.announce,
       submenu: [
         { name: 'ค้นหางาน', link: '/teacher/jobs' },
-        { name: 'สร้างประกาศงานใหม่', link: '/teacher/jobs/create' }
+        { name: 'สร้างประกาศงานใหม่', link: '/teacher/jobs/create' },
+        { name: 'จัดการประกาศงาน', link: '/teacher/jobs/manage' }
       ]
     },
     {

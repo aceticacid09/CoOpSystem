@@ -1,4 +1,5 @@
-<!-- frontend/src/components/CompanySections/JobApplicationsList.vue -->
+<!-- frontend/src/components/CompanySections/JobApplicationsList.vue --> 
+ <!-- มากด ai ตอนบ่ายสาม เพื่อใช้ componet searchbar customdropdown segmentedcontrol ในบัฐชี zuzalamelo -->
 <template>
     <div class="job-applications-page">
         <div class="page-header">
@@ -23,23 +24,6 @@
                     <span class="stat-value">{{ totalCount }}</span>
                 </div>
             </div>
-
-            <!-- <div class="stat-card">
-                <div class="stat-icon reviewing">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">ตรวจสอบเอกสาร</span>
-                    <span class="stat-value">{{ reviewingCount }}</span>
-                </div>
-            </div> -->
 
             <div class="stat-card">
                 <div class="stat-icon interview">
@@ -84,107 +68,18 @@
                     <span class="stat-value">{{ approvedCount }}</span>
                 </div>
             </div>
-
-            <!-- <div class="stat-card">
-                <div class="stat-icon rejected">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">ไม่ผ่านการคัดเลือก</span>
-                    <span class="stat-value">{{ rejectedCount }}</span>
-                </div>
-            </div> -->
         </div>
 
         <div class="filter-section">
-            <div class="tabs">
-                <button v-for="tab in tabs" :key="tab.value" class="tab-btn"
-                    :class="{ active: activeTab === tab.value }" @click="activeTab = tab.value">
-                    {{ tab.label }}
-                </button>
-            </div>
-
             <div class="filters-row">
-                <div class="filter-group">
-                    <label class="filter-label">ปีการศึกษา</label>
-                    <div class="custom-dropdown" ref="yearDropdownRef"
-                        @click="isYearDropdownOpen = !isYearDropdownOpen">
-                        <div class="dropdown-selected">
-                            <span>{{ selectedYear }}</span>
-                            <svg class="dropdown-arrow" :class="{ open: isYearDropdownOpen }"
-                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                        <transition name="dropdown-fade">
-                            <ul v-if="isYearDropdownOpen" class="dropdown-menu">
-                                <li v-for="year in academicYears" :key="year" @click.stop="selectYear(year)">
-                                    {{ year }}
-                                </li>
-                            </ul>
-                        </transition>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <label class="filter-label">ภาคที่</label>
-                    <div class="segmented-control">
-                        <button v-for="sem in semesters" :key="sem" :class="{ active: selectedSemester === sem }"
-                            @click="selectedSemester = sem">
-                            {{ sem }}
-                        </button>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <label class="filter-label">ตำแหน่งงาน</label>
-                    <div class="custom-dropdown" ref="jobDropdownRef" @click="isJobDropdownOpen = !isJobDropdownOpen">
-                        <div class="dropdown-selected">
-                            <span>{{ selectedJob }}</span>
-                            <svg class="dropdown-arrow" :class="{ open: isJobDropdownOpen }"
-                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                        <transition name="dropdown-fade">
-                            <ul v-if="isJobDropdownOpen" class="dropdown-menu">
-                                <li v-for="job in jobPositions" :key="job" @click.stop="selectJob(job)">
-                                    {{ job }}
-                                </li>
-                            </ul>
-                        </transition>
-                    </div>
-                </div>
+                <CustomDropdown label="สถานะ" v-model="activeTabLabel" :options="tabOptions" width="300px" />
+                <CustomDropdown label="ตำแหน่งงาน" v-model="selectedJob" :options="jobPositions" width="250px" />
+                <CustomDropdown label="ปีการศึกษา" v-model="selectedYear" :options="academicYears" width="250px" />
+                <SegmentedControl label="ภาคที่" v-model="selectedSemester" :options="semesters" />
             </div>
 
-            <div class="search-sort">
-                <div class="search-box">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    <input type="text" v-model="searchText" placeholder="ค้นหาชื่อนักศึกษา หรือตำแหน่งงาน" />
-                </div>
-                <button class="btn-search" @click="handleSearch">ค้นหา</button>
-                <button class="btn-sort" @click="toggleSort"
-                    :title="sortAscending ? 'เรียงจากเก่าสุด' : 'เรียงจากใหม่สุด'">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="#9CA3AF"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18M3 12h12M3 18h6" />
-                    </svg>
-                </button>
-            </div>
+            <SearchBar v-model="searchText" placeholder="ค้นหาชื่อนักศึกษา หรือตำแหน่งงาน" :is-ascending="sortAscending"
+                @search="handleSearch" @toggle-sort="toggleSort" />
         </div>
 
         <div v-if="isLoading" class="loading-state">
@@ -365,12 +260,16 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import CustomDropdown from '../components/CustomDropdown.vue';
+import SegmentedControl from '../components/SegmentedControl.vue';
+import SearchBar from '../components/SearchBar.vue';
 
 // =======================================================
 // STATE
 // =======================================================
 const isLoading = ref(false);
 const activeTab = ref('all');
+const activeTabLabel = ref('ทั้งหมด');
 const searchText = ref('');
 const selectedYear = ref(2568);
 const selectedSemester = ref(1);
@@ -378,12 +277,6 @@ const selectedJob = ref('ทั้งหมด');
 const sortAscending = ref(false);
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
-
-// Dropdown states
-const isYearDropdownOpen = ref(false);
-const isJobDropdownOpen = ref(false);
-const yearDropdownRef = ref(null);
-const jobDropdownRef = ref(null);
 
 // Expanded rows state
 const expandedRows = ref(new Set());
@@ -492,6 +385,8 @@ const tabs = computed(() => [
     { value: 'ผ่านการคัดเลือก', label: 'ผ่านการคัดเลือก', count: approvedCount.value },
     { value: 'ไม่ผ่านการคัดเลือก', label: 'ไม่ผ่านการคัดเลือก', count: rejectedCount.value }
 ]);
+
+const tabOptions = computed(() => tabs.value.map(tab => tab.label));
 
 const reviewingCount = computed(() =>
     mockApplicationsData.value.filter(a => a.status === 'ตรวจสอบเอกสาร').length
@@ -644,18 +539,6 @@ const toggleSort = () => {
     sortAscending.value = !sortAscending.value;
 };
 
-const selectYear = (year) => {
-    selectedYear.value = year;
-    isYearDropdownOpen.value = false;
-    currentPage.value = 1;
-};
-
-const selectJob = (job) => {
-    selectedJob.value = job;
-    isJobDropdownOpen.value = false;
-    currentPage.value = 1;
-};
-
 const handleSearch = () => {
     currentPage.value = 1;
 };
@@ -681,19 +564,19 @@ const viewApplication = (id) => {
     // TODO: Navigate to application details page
 };
 
-const handleClickOutside = (event) => {
-    if (yearDropdownRef.value && !yearDropdownRef.value.contains(event.target)) {
-        isYearDropdownOpen.value = false;
-    }
-    if (jobDropdownRef.value && !jobDropdownRef.value.contains(event.target)) {
-        isJobDropdownOpen.value = false;
-    }
-};
-
 // =======================================================
 // WATCHERS
 // =======================================================
-watch([activeTab, searchText, selectedYear, selectedSemester, selectedJob], () => {
+watch(activeTabLabel, (newLabel) => {
+    const tab = tabs.value.find(t => t.label === newLabel);
+    if (tab) {
+        activeTab.value = tab.value;
+    }
+    currentPage.value = 1;
+    expandedRows.value.clear();
+});
+
+watch([searchText, selectedYear, selectedSemester, selectedJob], () => {
     currentPage.value = 1;
     expandedRows.value.clear();
 });
@@ -702,7 +585,6 @@ watch([activeTab, searchText, selectedYear, selectedSemester, selectedJob], () =
 // LIFECYCLE
 // =======================================================
 onMounted(() => {
-    document.addEventListener('click', handleClickOutside);
     isLoading.value = true;
     setTimeout(() => {
         isLoading.value = false;
@@ -710,7 +592,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    document.removeEventListener('click', handleClickOutside);
+    // Cleanup if needed
 });
 </script>
 
@@ -851,40 +733,6 @@ onBeforeUnmount(() => {
     border: 1px solid #eef0ef;
 }
 
-.tabs {
-    display: flex;
-    gap: 25px;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
-    color: #555;
-    padding-bottom: 8px;
-    cursor: pointer;
-    position: relative;
-    font-weight: 500;
-}
-
-.tab-btn.active {
-    color: #037266;
-    font-weight: 600;
-}
-
-.tab-btn.active::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -1px;
-    width: 100%;
-    height: 2px;
-    background: #037266;
-}
-
 .filters-row {
     display: flex;
     gap: 20px;
@@ -897,197 +745,6 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     gap: 6px;
-}
-
-.filter-label {
-    font-size: 13px;
-    color: #6b6b6b;
-    font-weight: 500;
-}
-
-.custom-dropdown {
-    position: relative;
-    width: 250px;
-    cursor: pointer;
-    user-select: none;
-}
-
-.dropdown-selected {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 14px;
-    background: #fff;
-    border: 1px solid #e5e7e6;
-    border-radius: 10px;
-    font-size: 14px;
-    color: #333;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(10, 10, 10, 0.02);
-}
-
-.dropdown-selected:hover {
-    border-color: #037266;
-    box-shadow: 0 4px 12px rgba(3, 114, 102, 0.08);
-}
-
-.dropdown-arrow {
-    transition: transform 0.25s ease;
-    flex-shrink: 0;
-    margin-left: 8px;
-}
-
-.dropdown-arrow.open {
-    transform: rotate(180deg);
-}
-
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    width: 100%;
-    background: #fff;
-    border: 1px solid #e5e7e6;
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(6, 20, 18, 0.12);
-    max-height: 240px;
-    overflow-y: auto;
-    z-index: 100;
-    list-style: none;
-    margin: 0;
-    padding: 6px;
-}
-
-.dropdown-menu li {
-    padding: 9px 12px;
-    font-size: 14px;
-    color: #333;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: all 0.15s ease;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.dropdown-menu li:hover {
-    background: #f0f8f7;
-    color: #037266;
-}
-
-.dropdown-fade-enter-active,
-.dropdown-fade-leave-active {
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    transform-origin: top;
-}
-
-.dropdown-fade-enter-from {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.95);
-}
-
-.dropdown-fade-leave-to {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.98);
-}
-
-.segmented-control {
-    display: inline-flex;
-    border-radius: 12px;
-    background: #f7f9f8;
-    padding: 4px;
-    gap: 4px;
-    border: 1px solid #eef4f2;
-    box-shadow: 0 1px 3px rgba(10, 10, 10, 0.02);
-}
-
-.segmented-control button {
-    min-width: 44px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    font-weight: 600;
-    color: #556;
-    transition: background .18s, color .18s, transform .08s;
-}
-
-.segmented-control button.active {
-    background: linear-gradient(180deg, #037266, #026b5b);
-    color: #fff;
-    box-shadow: 0 6px 16px rgba(3, 114, 102, 0.12);
-    transform: translateY(-1px);
-}
-
-.search-sort {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.search-box {
-    flex: 1;
-    min-width: 250px;
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-icon {
-    position: absolute;
-    left: 14px;
-    color: #999;
-}
-
-.search-box input {
-    width: 100%;
-    padding: 11px 14px 11px 42px;
-    border: 2px solid #e5e5e5;
-    border-radius: 10px;
-    font-size: 14px;
-    transition: all 0.2s;
-    font-family: "Kanit", sans-serif;
-}
-
-.search-box input:focus {
-    outline: none;
-    border-color: #037266;
-    background: #f0f8f7;
-}
-
-.btn-search {
-    background: #037266;
-    color: #fff;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow: 0 6px 18px rgba(3, 114, 102, 0.08);
-    font-size: 14px;
-    transition: all 0.2s;
-    height: 45px;
-    width: 90px;
-}
-
-.btn-search:hover {
-    transform: translateY(-2px);
-}
-
-.btn-sort {
-    background: #f1f1f1;
-    border: none;
-    padding: 8px 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    height: 45px;
-    width: 70px;
-}
-
-.btn-sort:hover {
-    background: #e0e0e0;
 }
 
 /* =================================== */
@@ -1564,15 +1221,6 @@ onBeforeUnmount(() => {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .search-sort {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-box {
-        min-width: 100%;
-    }
-
     .btn-search,
     .btn-sort {
         width: 100%;
@@ -1597,15 +1245,6 @@ onBeforeUnmount(() => {
     .filters-row {
         flex-direction: column;
         align-items: stretch;
-    }
-
-    .custom-dropdown {
-        width: 100%;
-    }
-
-    .segmented-control {
-        width: 100%;
-        justify-content: space-between;
     }
 
     .applications-table th,

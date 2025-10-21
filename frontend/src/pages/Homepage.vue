@@ -97,13 +97,13 @@ const teachers = ref([
   },
   {
     name: "อ. สมชาย ใจดี",
-    position: "ภาควิชาเคมี",
+    position: "ภาควิชาคณิตศาสตร์",
     image:
       "https://i.pinimg.com/736x/63/53/d9/6353d9fff14cc31af369dd0254fd8c97.jpg",
   },
   {
     name: "อ. สมหญิง เก่งงาน",
-    position: "ภาควิชาฟิสิกส์",
+    position: "ภาควิชาเคมี",
     image:
       "https://i.pinimg.com/736x/63/53/d9/6353d9fff14cc31af369dd0254fd8c97.jpg",
   },
@@ -115,34 +115,28 @@ const teachers = ref([
   },
   {
     name: "อ. นฤมล ศรีสุข",
-    position: "ภาควิชาคณิตศาสตร์",
+    position: "ภาควิชาฟิสิกส์",
     image:
       "https://i.pinimg.com/736x/63/53/d9/6353d9fff14cc31af369dd0254fd8c97.jpg",
   },
   {
     name: "อ. พรชัย อารีย์",
-    position: "ภาควิชาสถิติ",
+    position: "ภาควิชาวิทยาศาสตร์สิ่งแวดล้อม",
     image:
       "https://i.pinimg.com/736x/63/53/d9/6353d9fff14cc31af369dd0254fd8c97.jpg",
   },
   {
     name: "อ. สุรีย์รัตน์ วัฒนะ",
-    position: "ภาควิชาเทคโนโลยีชีวภาพ",
+    position: "ภาควิชาสถิติ",
     image:
       "https://i.pinimg.com/736x/63/53/d9/6353d9fff14cc31af369dd0254fd8c97.jpg",
   },
   {
     name: "อ. กิตติศักดิ์ ชาญชัย",
-    position: "ภาควิชาอิเล็กทรอนิกส์",
+    position: "ภาควิชาจุลชีววิทยา",
     image:
       "https://i.pinimg.com/736x/63/53/d9/6353d9fff14cc31af369dd0254fd8c97.jpg",
-  },
-  {
-    name: "อ. จันทร์เพ็ญ ศิริสุข",
-    position: "ภาควิชาวิทยาศาสตร์สิ่งแวดล้อม",
-    image:
-      "https://i.pinimg.com/736x/63/53/d9/6353d9fff14cc31af369dd0254fd8c97.jpg",
-  },
+  }
 ]);
 
 const onSlideChange = (swiper) => {
