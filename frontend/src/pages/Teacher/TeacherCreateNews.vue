@@ -713,24 +713,22 @@ const createAnotherNews = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// ⭐ ฟังก์ชันโหลดข้อมูลแบบร่าง
+// โหลดข้อมูลแบบร่าง
 const loadDraftNews = async () => {
   try {
-    // Check if there's data in route query
     const draftId = route.query.draftId;
     const encodedData = route.query.data;
     
     if (draftId && encodedData) {
-      // Decode and parse the data passed through query
       const decodedData = JSON.parse(decodeURIComponent(encodedData));
       
-      // Populate form with announcement data
-      newsForm.title = decodedData.title;
+      // Consistently map the data fields
+      newsForm.title = decodedData.title || '';
       newsForm.category = decodedData.category || '';
-      newsForm.description = decodedData.description;
+      newsForm.description = decodedData.description || '';
       
       // Set publish type based on status
-      publishType.value = decodedData.status;
+      publishType.value = decodedData.status || 'draft';
       
       // Handle scheduled date if exists
       if (decodedData.publish_date) {

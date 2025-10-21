@@ -699,27 +699,24 @@ const editNews = async (news) => {
     if (!response.ok) throw new Error('Failed to fetch announcement details');
     
     const fullNews = await response.json();
-    console.log('Fetched announcement details:', fullNews);
     
-    // If it's a draft, go to Create with draft data
-    if (news.status === 'draft') {
-      // Instead of using btoa, use encodeURIComponent
-      router.push({
-        name: 'TeacherCreateNews',
-        query: { 
-          draftId: news.post_id,
-          data: encodeURIComponent(JSON.stringify(fullNews))
-        }
-      });
-    } else {
-      // For published/scheduled news, go to Edit route
-      router.push({ 
-        name: 'TeacherEditNews', 
-        params: { id: news.post_id },
-        // Pass data through router state instead of query
-        state: { announcement: fullNews }
-      });
-    }
+    // Use the same route and data structure for both new and existing posts
+    router.push({
+      name: 'TeacherCreateNews',
+      query: { 
+        draftId: news.post_id,
+        data: encodeURIComponent(JSON.stringify({
+          post_id: fullNews.post_id,
+          title: fullNews.title,
+          description: fullNews.description,
+          category: fullNews.category,
+          status: fullNews.status,
+          publish_date: fullNews.publish_date,
+          attachments: fullNews.attachments || []
+        }))
+      }
+    });
+    
     closeSidePanel();
   } catch (error) {
     console.error('Error preparing to edit announcement:', error);
