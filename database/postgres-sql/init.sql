@@ -61,6 +61,21 @@ CREATE TABLE Job_Position (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- สร้างตาราง Attachment (ไฟล์แนบ)
+CREATE TABLE Attachment (
+    attachment_id SERIAL PRIMARY KEY,
+    file_count INTEGER DEFAULT 0 NOT NULL
+);
+
+-- สร้างตาราง StudentDoc (เอกสารนักศึกษา)
+CREATE TABLE StudentDoc (
+    sdoc_id SERIAL PRIMARY KEY,
+    student_id INTEGER REFERENCES Student(student_id),
+    doc_type doc_types NOT NULL,
+    attachment_id INTEGER REFERENCES Attachment(attachment_id),
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- สร้างตาราง Application (ใบสมัคร)
 CREATE TABLE Application (
     application_id SERIAL PRIMARY KEY,
@@ -80,12 +95,6 @@ CREATE TABLE File (
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- สร้างตาราง Attachment (ไฟล์แนบ)
-CREATE TABLE Attachment (
-    attachment_id SERIAL PRIMARY KEY,
-    file_count INTEGER DEFAULT 0 NOT NULL
-);
-
 -- สร้างตาราง Attachment_File (ตารางเชื่อมโยงระหว่าง Attachment และ File)
 CREATE TABLE Attachment_File (
     attachment_id INTEGER REFERENCES Attachment(attachment_id) ON DELETE CASCADE,
@@ -103,15 +112,6 @@ CREATE TABLE Announ_News (
     teacher_id INTEGER REFERENCES Teacher(teacher_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- สร้างตาราง StudentDoc (เอกสารนักศึกษา)
-CREATE TABLE StudentDoc (
-    sdoc_id SERIAL PRIMARY KEY,
-    student_id INTEGER REFERENCES Student(student_id),
-    doc_type doc_types NOT NULL,
-    attachment_id INTEGER REFERENCES Attachment(attachment_id),
-    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- สร้างตาราง PublicDoc (เอกสารสาธารณะ)
