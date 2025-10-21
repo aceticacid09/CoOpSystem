@@ -7,14 +7,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Config โครงสร้างหลักของการตั้งค่าแอป
 type Config struct {
-	AppPort     string // พอร์ตที่แอปจะฟัง
-	DatabaseURL string // URL สำหรับเชื่อมต่อ Postgres
-	JWTSecret   string // JWT secret key
+	AppPort        string
+	DatabaseURL    string
+	JWTSecret      string
+	AllowedOrigins []string
 }
 
-// New โหลดค่าต่างๆ จาก environment variables ด้วย Viper
 func New() (*Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -29,10 +28,19 @@ func New() (*Config, error) {
 		cfg.AppPort = "8080"
 	}
 	if cfg.JWTSecret == "" {
-		cfg.JWTSecret = "your-secret-key" // todo: set this via environment
+		cfg.JWTSecret = "your-secret-key"
 	}
 
-	// สร้าง DatabaseURL
+	// Parse ALLOWED_ORIGINS
+	allowedOrigins := viper.GetString("ALLOWED_ORIGINS")
+	if allowedOrigins != "" {
+		cfg.AllowedOrigins = strings.Split(allowedOrigins, ",")
+	} else {
+		// Default for development
+		cfg.AllowedOrigins = []string{"http://localhost:5173"}
+	}
+
+	// Build DatabaseURL
 	cfg.DatabaseURL = fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		viper.GetString("POSTGRES_HOST"),

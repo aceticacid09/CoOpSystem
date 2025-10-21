@@ -1,0 +1,6 @@
+# Ignore from backend
+backend/uploads
+
+# environment files
+# .env
+# .env.production

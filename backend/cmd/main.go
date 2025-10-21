@@ -58,7 +58,7 @@ func main() {
 
     // Enable CORS
     r.Use(cors.New(cors.Config{
-        AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8000"},
+        AllowOrigins:     cfg.AllowedOrigins,
         AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
         AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
         ExposeHeaders:    []string{"Content-Length"},
@@ -75,7 +75,10 @@ func main() {
     intRoutes.RegisterPublicDocRoutes(r, publicDocHandler)
     intRoutes.RegisterJobPositionRoutes(r, jobPositionHandler)
 
-    if err := r.Run(":8000"); err != nil {
-        log.Fatalf("failed to start server: %v", err)
-    }
+    // if err := r.Run(":8000"); err != nil {
+    //     log.Fatalf("failed to start server: %v", err)
+    // }
+    if err := r.Run(":" + cfg.AppPort); err != nil {
+    log.Fatalf("failed to start server: %v", err)
+}
 }
