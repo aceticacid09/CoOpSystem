@@ -511,6 +511,7 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import DashboardLayout from '../../components/DashboardLayout.vue';
+import { API_CONFIG } from '../../../config/api';
 
 // =======================================================
 // 1. CONSTANTS & STATIC DATA
@@ -562,7 +563,7 @@ const isStep1Valid = computed(() => {
         newsForm.category.trim() !== '' &&
         newsForm.description.trim() !== '';
 
-    // ⭐ ถ้าเลือกแบบร่าง: ต้องมีข้อมูลพื้นฐานเท่านั้น (ไม่บังคับวันที่)
+    // ถ้าเลือกแบบร่าง: ต้องมีข้อมูลพื้นฐานเท่านั้น (ไม่บังคับวันที่)
     if (publishType.value === 'draft') {
         return hasBasicInfo;
     }
@@ -590,12 +591,59 @@ watch(previewMode, () => {
 });
 
 watch(publishType, (newType) => {
-    // ⭐ ล้างวันที่เมื่อไม่ได้เลือก "กำหนดวันเวลา"
+    // ล้างวันที่เมื่อไม่ได้เลือก "กำหนดวันเวลา"
     if (newType !== 'scheduled') {
         newsForm.publishDate = '';
         newsForm.publishTime = '';
     }
 });
+
+const createAnnouncement = async () => {
+  try {
+    // Map frontend status values to backend ENUM values
+    const statusMap = {
+      'draft': 'draft',
+      'immediate': 'immediate',
+      'scheduled': 'scheduled'
+    };
+
+    const formData = new FormData();
+    formData.append('title', newsForm.title);
+    formData.append('description', newsForm.description);
+    formData.append('status', statusMap[publishType.value]); // Use the mapped status
+    formData.append('category', newsForm.category);
+
+    if (publishType.value === 'scheduled') {
+      formData.append('publish_date', `${newsForm.publishDate}T${newsForm.publishTime}`);
+    }
+
+    // Debug log to verify the status being sent
+    console.log('Sending status:', statusMap[publishType.value]);
+
+    uploadedImages.value.forEach(img => {
+      if (img.file) formData.append('files', img.file);
+    });
+
+    const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Server error:', errorData);
+      throw new Error(`Failed to create announcement: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Announcement created:', data);
+    return data;
+  } catch (error) {
+    console.error('Error creating announcement:', error);
+    throw error;
+  }
+};
+
 
 // =======================================================
 // 6. CORE METHODS & HANDLERS
@@ -605,15 +653,29 @@ const goBack = () => {
     router.back();
 };
 
-const nextStep = () => {
-    if (currentStep.value === 1 && !isStep1Valid.value) {
-        alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
-        return;
-    }
-    if (currentStep.value < 3) {
-        currentStep.value++;
+const nextStep = async () => {
+  if (currentStep.value === 1 && !isStep1Valid.value) {
+    alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
+    return;
+  }
+
+  if (currentStep.value === 2) {
+    try {
+      // Show loading state if needed
+      const result = await createAnnouncement();
+      if (result) {
+        currentStep.value = 3;
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (error) {
+      alert('เกิดข้อผิดพลาดในการสร้างข่าวสาร กรุณาลองใหม่อีกครั้ง');
+      console.error('Error:', error);
+      return;
     }
+  } else if (currentStep.value < 3) {
+    currentStep.value++;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 };
 
 const prevStep = () => {
@@ -632,6 +694,7 @@ const cancelCreation = () => {
 const createAnotherNews = () => {
     // Reset form
     Object.assign(newsForm, {
+        id: null,
         title: '',
         category: '',
         description: '',
@@ -651,34 +714,49 @@ const createAnotherNews = () => {
 };
 
 // ⭐ ฟังก์ชันโหลดข้อมูลแบบร่าง
-const loadDraftNews = (draftId) => {
-    // นำเข้า newsList จาก newsData
-    import('../../data/newsData.js').then((module) => {
-        const foundNews = module.newsList.find(n => n.id === draftId && n.status === 'draft');
-        
-        if (foundNews) {
-            // โหลดข้อมูลเข้า form
-            newsForm.title = foundNews.title;
-            newsForm.category = foundNews.category;
-            newsForm.description = foundNews.description;
-            
-            // ตั้งค่า publishType
-            publishType.value = 'draft';
-            
-            // โหลดรูปภาพถ้ามี
-            if (foundNews.images && foundNews.images.length > 0) {
-                uploadedImages.value = foundNews.images.map(img => ({
-                    preview: img,
-                    isExisting: true
-                }));
-            }
-            
-            // โหลด description เข้า editor
-            if (editor.value) {
-                editor.value.innerHTML = foundNews.description;
-            }
-        }
-    });
+const loadDraftNews = async () => {
+  try {
+    // Check if there's data in route query
+    const draftId = route.query.draftId;
+    const encodedData = route.query.data;
+    
+    if (draftId && encodedData) {
+      // Decode and parse the data passed through query
+      const decodedData = JSON.parse(decodeURIComponent(encodedData));
+      
+      // Populate form with announcement data
+      newsForm.title = decodedData.title;
+      newsForm.category = decodedData.category || '';
+      newsForm.description = decodedData.description;
+      
+      // Set publish type based on status
+      publishType.value = decodedData.status;
+      
+      // Handle scheduled date if exists
+      if (decodedData.publish_date) {
+        const publishDateTime = new Date(decodedData.publish_date);
+        newsForm.publishDate = publishDateTime.toISOString().split('T')[0];
+        newsForm.publishTime = publishDateTime.toTimeString().slice(0,5);
+      }
+      
+      // Load images if they exist
+      if (decodedData.attachments && decodedData.attachments.length > 0) {
+        uploadedImages.value = decodedData.attachments.map(attachment => ({
+          preview: `${API_CONFIG.baseURL}/uploads/news/${attachment.filename}`,
+          isExisting: true,
+          fileId: attachment.file_id
+        }));
+      }
+      
+      // Load content into editor
+      if (editor.value && decodedData.description) {
+        editor.value.innerHTML = decodedData.description;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading draft news:', error);
+    alert('เกิดข้อผิดพลาดในการโหลดข้อมูลข่าวสาร');
+  }
 };
 
 // B. Image Handling
@@ -815,11 +893,8 @@ onMounted(() => {
         newsForm.description = editor.value.innerHTML;
     }
     
-    // ⭐ ตรวจสอบว่ามี draftId ใน query หรือไม่
-    const draftId = route.query.draftId;
-    if (draftId) {
-        loadDraftNews(parseInt(draftId));
-    }
+    // Load draft/edit data if available
+    loadDraftNews();
 });
 
 onBeforeUnmount(() => {

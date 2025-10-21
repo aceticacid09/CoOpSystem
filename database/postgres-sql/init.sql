@@ -1,6 +1,6 @@
 CREATE type role_type as ENUM ('admin', 'teacher', 'student', 'company');
 CREATE type company_status as ENUM ('active', 'inactive', 'pending');
-CREATE type announcement_status as ENUM ('draft', 'published', 'archived');
+CREATE type announcement_status as ENUM ('draft', 'immediate', 'scheduled');
 CREATE type job_status as ENUM ('open', 'closed', 'pending');
 CREATE type application_status as ENUM ('pending', 'approved', 'rejected');
 CREATE type doc_types as ENUM ('resume', 'cv', 'portfolio', 'transcript', 'other');
@@ -106,6 +106,7 @@ CREATE TABLE Attachment_File (
 CREATE TABLE Announ_News (
     post_id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
+    categories VARCHAR(255),
     description TEXT,
     attachment_id INTEGER REFERENCES Attachment(attachment_id),
     status announcement_status NOT NULL DEFAULT 'draft',

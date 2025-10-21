@@ -3,8 +3,8 @@
   <DashboardLayout role="teacher">
     <NewsSections 
       :show-bookmark="true"
-      :initial-bookmarked="[1, 2, 4]"
-      :initial-saved="[1, 2, 4]"
+      :initial-bookmarked="[1, 2]"
+      :initial-saved="[1]"
     />
   </DashboardLayout>
 </template>

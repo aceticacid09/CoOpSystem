@@ -98,7 +98,7 @@ func (h *AnnouncementHandler) CreateAnnouncement(c *gin.Context) {
 	if status != "" {
         status := models.AnnouncementStatus(status)
         // Basic validation (optional but recommended)
-        if status == models.StatusDraft || status == models.StatusPublished || status == models.StatusArchived {
+        if status == models.StatusDraft || status == models.StatusImmediate || status == models.StatusScheduled {
             req.Status = &status
         }
     }

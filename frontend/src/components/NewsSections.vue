@@ -84,13 +84,12 @@ onMounted(async () => {
     if (!res.ok) throw new Error(`Failed to fetch announcements: ${res.status}`);
     
     const data = await res.json();
-    console.log('API Response:', data);
+    // console.log('API Response:', data);
     
     // Transform the announcements data to match expected format
     const transformedAnnouncements = data.announcements.map(transformAnnouncement);
     itemsState.value = transformedAnnouncements;
     
-    console.log('Processed items:', itemsState.value);
   } catch (err) {
     console.error("Failed to load announcements:", err);
     fetchError.value = err;
@@ -101,7 +100,6 @@ onMounted(async () => {
 
 const filteredNews = computed(() => {
   const newsSource = props.items || itemsState.value;
-  console.log('News source:', newsSource); // Debug source data
   
   const filtered = (newsSource || []).filter(
     n => {
@@ -111,7 +109,6 @@ const filteredNews = computed(() => {
     }
   );
   
-  console.log('Filtered results:', filtered); // Debug filtered results
   return isAscending.value ? filtered : filtered.slice().reverse();
 });
 

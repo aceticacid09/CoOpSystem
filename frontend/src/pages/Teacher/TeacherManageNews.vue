@@ -374,7 +374,7 @@ import DashboardLayout from '../../components/DashboardLayout.vue';
 import SearchBar from '../../components/SearchBar.vue';
 import NewsSidePanel from '../../components/NewSidePanel.vue';
 import CustomDropdown from '../../components/CustomDropdown.vue';
-import { getPublishableNews } from '../../data/newsData.js';
+import { API_CONFIG } from '../../../config/api';
 
 const router = useRouter();
 
@@ -405,7 +405,32 @@ const showDeleteConfirm = ref(false);
 const newsToDelete = ref(null);
 
 // Data
-const mockNewsData = ref(getPublishableNews());
+// const mockNewsData = ref(getPublishableNews());
+const announcements = ref([]);
+const fetchAnnouncements = async () => {
+  isLoading.value = true;
+  try {
+    const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`);
+    if (!res.ok) throw new Error('Failed to fetch announcements');
+    const data = await res.json();
+    announcements.value = data.announcements.map(announcement => ({
+      id: announcement.post_id,
+      post_id: announcement.post_id, // Add this line
+      title: announcement.title,
+      description: announcement.description,
+      status: announcement.status,
+      date: announcement.created_at,
+      publishDate: announcement.publish_date,
+      category: "ประชาสัมพันธ์", // Map category if needed
+      teacher: announcement.teacher,
+      images: announcement.attachments?.map(att => `/uploads/news/${att.filename}`) || []
+    }));
+  } catch (error) {
+    console.error('Error fetching announcements:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 const tabs = ["ข่าวทั้งหมด", "ประชาสัมพันธ์", "ข่าวด่วน", "กิจกรรม", "ประกาศผลการคัดเลือก"];
 const statusOptions = ["ทั้งหมด", "เผยแพร่แล้ว", "รอเผยแพร่", "แบบร่าง"];
@@ -426,22 +451,22 @@ const dateRangeDisplay = computed(() => {
 
 // Stats
 const publishedCount = computed(() =>
-    mockNewsData.value.filter(n => n.status === 'published').length
+    announcements.value.filter(n => n.status === 'immediate').length
 );
 
 const scheduledCount = computed(() =>
-    mockNewsData.value.filter(n => n.status === 'scheduled').length
+    announcements.value.filter(n => n.status === 'scheduled').length
 );
 
 const draftCount = computed(() =>
-    mockNewsData.value.filter(n => n.status === 'draft').length
+    announcements.value.filter(n => n.status === 'draft').length
 );
 
-const totalCount = computed(() => mockNewsData.value.length);
+const totalCount = computed(() => announcements.value.length);
 
 // News Filtering & Sorting
 const filteredNews = computed(() => {
-    let result = [...mockNewsData.value];
+    let result = [...announcements.value];
 
     // Filter by tab (category)
     if (activeTab.value !== 'ข่าวทั้งหมด') {
@@ -451,7 +476,7 @@ const filteredNews = computed(() => {
     // Filter by status from dropdown
     const statusMap = {
         'ทั้งหมด': 'all',
-        'เผยแพร่แล้ว': 'published',
+        'เผยแพร่แล้ว': 'immediate',
         'รอเผยแพร่': 'scheduled',
         'แบบร่าง': 'draft',
     };
@@ -546,7 +571,7 @@ const hasActiveFilters = computed(() =>
 const canBulkPublish = computed(() => {
     if (selectedNews.value.length === 0) return false;
     return selectedNews.value.some(id => {
-        const news = mockNewsData.value.find(n => n.id === id);
+        const news = announcements.value.find(n => n.id === id);
         return news && news.status === 'scheduled';
     });
 });
@@ -561,7 +586,7 @@ const updateScheduledNews = () => {
 
     let updated = false;
 
-    mockNewsData.value = mockNewsData.value.map(news => {
+    announcements.value = announcements.value.map(news => {
         const newsDate = new Date(news.publishDate || news.date);
         newsDate.setHours(0, 0, 0, 0);
 
@@ -573,7 +598,7 @@ const updateScheduledNews = () => {
     });
 
     if (updated) {
-        mockNewsData.value = [...mockNewsData.value];
+        announcements.value = [...announcements.value];
     }
 };
 
@@ -608,7 +633,7 @@ const truncateText = (text, maxLength) => {
 
 const getStatusText = (status) => {
     const statusMap = {
-        published: 'เผยแพร่แล้ว',
+        immediate: 'เผยแพร่แล้ว',
         scheduled: 'รอเผยแพร่',
         draft: 'แบบร่าง'
     };
@@ -667,18 +692,39 @@ const closeSidePanel = () => {
     selectedNewsDetail.value = null;
 };
 
-const editNews = (news) => {
-    // ⭐ ถ้าเป็นแบบร่าง ให้ไปหน้า Create แทน
+const editNews = async (news) => {
+  try {
+    // First fetch the full announcement details
+    const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${news.id}`);
+    if (!response.ok) throw new Error('Failed to fetch announcement details');
+    
+    const fullNews = await response.json();
+    console.log('Fetched announcement details:', fullNews);
+    
+    // If it's a draft, go to Create with draft data
     if (news.status === 'draft') {
-        router.push({
-            name: 'TeacherCreateNews',
-            query: { draftId: news.id } // ส่ง id ไปด้วย
-        });
+      // Instead of using btoa, use encodeURIComponent
+      router.push({
+        name: 'TeacherCreateNews',
+        query: { 
+          draftId: news.post_id,
+          data: encodeURIComponent(JSON.stringify(fullNews))
+        }
+      });
     } else {
-        // สถานะอื่นๆ ไปหน้า Edit ตามปกติ
-        router.push({ name: 'TeacherEditNews', params: { id: news.id } });
+      // For published/scheduled news, go to Edit route
+      router.push({ 
+        name: 'TeacherEditNews', 
+        params: { id: news.post_id },
+        // Pass data through router state instead of query
+        state: { announcement: fullNews }
+      });
     }
     closeSidePanel();
+  } catch (error) {
+    console.error('Error preparing to edit announcement:', error);
+    alert('ไม่สามารถแก้ไขข่าวสารได้ กรุณาลองใหม่อีกครั้ง');
+  }
 };
 
 const confirmDelete = (news) => {
@@ -689,39 +735,64 @@ const confirmDelete = (news) => {
     }
 };
 
-const executeDelete = () => {
+const executeDelete = async () => {
+  try {
     if (newsToDelete.value) {
-        const index = mockNewsData.value.findIndex(n => n.id === newsToDelete.value.id);
-        if (index > -1) {
-            mockNewsData.value.splice(index, 1);
-        }
-    } else {
-        mockNewsData.value = mockNewsData.value.filter(
-            news => !selectedNews.value.includes(news.id)
-        );
-        selectedNews.value = [];
-        selectAll.value = false;
+      const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsToDelete.value.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete announcement');
+      
+      await fetchAnnouncements(); // Refresh the list
+    } else if (selectedNews.value.length > 0) {
+      // Bulk delete
+      await Promise.all(selectedNews.value.map(id => 
+        fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
+          method: 'DELETE'
+        })
+      ));
+      
+      await fetchAnnouncements(); // Refresh the list
+      selectedNews.value = [];
+      selectAll.value = false;
     }
 
     showDeleteConfirm.value = false;
     newsToDelete.value = null;
+  } catch (error) {
+    console.error('Error deleting announcement(s):', error);
+    // Add error handling UI feedback here
+  }
 };
 
-const bulkPublish = () => {
-    const today = new Date().toISOString().split('T')[0];
+const bulkPublish = async () => {
+  try {
+    await Promise.all(selectedNews.value.map(async (id) => {
+      const news = announcements.value.find(n => n.id === id);
+      if (news && news.status === 'scheduled') {
+        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'published',
+            publish_date: new Date().toISOString()
+          })
+        });
+        
+        if (!response.ok) throw new Error(`Failed to publish announcement ${id}`);
+      }
+    }));
 
-    selectedNews.value.forEach(id => {
-        const news = mockNewsData.value.find(n => n.id === id);
-        if (news && news.status === 'scheduled') {
-            news.status = 'published';
-            news.publishDate = today;
-            news.date = today;
-        }
-    });
-
+    await fetchAnnouncements(); // Refresh the list
     selectedNews.value = [];
     selectAll.value = false;
-    mockNewsData.value = [...mockNewsData.value];
+  } catch (error) {
+    console.error('Error publishing announcements:', error);
+    // Add error handling UI feedback here
+  }
 };
 
 const bulkDelete = () => {
@@ -752,16 +823,14 @@ watch(paginatedNews, () => {
     );
 });
 
-onMounted(() => {
-    document.addEventListener('click', handleClickOutside);
-
-    isLoading.value = true;
-    setTimeout(() => {
-        isLoading.value = false;
-    }, 500);
-
-    updateScheduledNews();
-    statusCheckInterval = setInterval(updateScheduledNews, 60000);
+// In the same file
+onMounted(async () => {
+  document.addEventListener('click', handleClickOutside);
+  await fetchAnnouncements();
+  
+  // Update scheduled announcements periodically
+  updateScheduledNews();
+  statusCheckInterval = setInterval(updateScheduledNews, 60000);
 });
 
 onBeforeUnmount(() => {
