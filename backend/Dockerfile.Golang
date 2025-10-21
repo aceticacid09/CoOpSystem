@@ -10,7 +10,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd
 
-# Create UploadPic/ProfilePic and UploadPic/UserUpload directories
+# Create upload directories
 RUN mkdir -p /app/uploads/public_docs /app/uploads/documents /app/uploads/news /app/uploads/profile /app/uploads/student_docs
 
 # Run Stage
@@ -21,5 +21,11 @@ RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /root/
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/uploads ./uploads
+
+# Create upload directories at runtime
+RUN mkdir -p /root/uploads/public_docs /root/uploads/documents /root/uploads/news /root/uploads/profile /root/uploads/student_docs
+
+EXPOSE 8000
 
 ENTRYPOINT ["./main"]
