@@ -223,15 +223,33 @@ INSERT INTO File (storage_path, file_name, file_type) VALUES
 ('/uploads/student_docs/', 'portfolio_student1.pdf', 'pdf'),
 ('/uploads/news/', 'announcement_2.jpg', 'jpg'),
 ('/uploads/news/', 'announcement_3.pdf', 'pdf'),
-('/uploads/student_docs/', 'transcript_student1.pdf', 'pdf');
-  
+('/uploads/student_docs/', 'transcript_student1.pdf', 'pdf'),
+('/uploads/news/', 'news_Placeholder.png', 'png'),  -- News 1
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 2 (img 1)
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 2 (img 2)
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 2 (img 3)
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 4 (img 1)
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 4 (img 2)
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 5 (img 1)
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 5 (img 2)
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 6 (img 1)
+('/uploads/news/', 'news_Placeholder.png', 'png'), -- News 6 (img 2)
+('/uploads/news/', 'news_Placeholder.png', 'png'); -- News 8
+
 -- เพิ่มข้อมูลตัวอย่าง Attachment  
 INSERT INTO Attachment (file_count) VALUES  
 (1),  -- attachment_id = 1 (for job position 1)
 (1),  -- attachment_id = 2 (for job position 2)
 (3),  -- attachment_id = 3 (for announcement 1, has 3 files)
 (1),  -- attachment_id = 4 (for student doc 1)
-(3);  -- attachment_id = 5 (for student doc 2, has 3 files)
+(3),  -- attachment_id = 5 (for student doc 2, has 3 files)
+
+(1),  -- For News 1 (1 file)
+(3),  -- For News 2 (3 files)
+(2),  -- For News 4 (2 files)
+(2),  -- For News 5 (2 files)
+(2), -- For News 6 (2 files)
+(1); -- For News 8 (1 file)
 
 -- เพิ่มข้อมูลตัวอย่าง Attachment_File (Junction Table)
 INSERT INTO Attachment_File (attachment_id, file_id) VALUES
@@ -248,8 +266,25 @@ INSERT INTO Attachment_File (attachment_id, file_id) VALUES
 -- Attachment 5 (Student Doc 2) has 3 files
 (5, 5),
 (5, 8),
-(5, 4);  -- Reusing file 4 to show files can be shared
-  
+(5, 4),  -- Reusing file 4 to show files can be shared
+-- News 1 (Attachment 6)
+(6, 9),
+-- News 2 (Attachment 7)
+(7, 10),
+(7, 11),
+(7, 12),
+-- News 4 (Attachment 8)
+(8, 13),
+(8, 14),
+-- News 5 (Attachment 9)
+(9, 15),
+(9, 16),
+-- News 6 (Attachment 10)
+(10, 17),
+(10, 18),
+-- News 8 (Attachment 11)
+(11, 19);
+
 -- เพิ่มข้อมูลตัวอย่าง Job_Position  
 INSERT INTO Job_Position (title, description, company_id, attachment_id, status) VALUES  
 ('นักพัฒนาซอฟต์แวร์', 'รับสมัครนักพัฒนาซอฟต์แวร์ มีประสบการณ์ 0-2 ปี', 6, 1, 'open'),  
@@ -264,10 +299,22 @@ INSERT INTO Application (job_id, student_id, status) VALUES
 (3, 3, 'rejected');  
   
 -- เพิ่มข้อมูลตัวอย่าง Announ_News  
-INSERT INTO Announ_News (title, description, attachment_id, teacher_id) VALUES  
-('ประกาศรับสมัครงาน บริษัท ABC', 'บริษัท ABC เปิดรับสมัครตำแหน่งนักพัฒนาซอฟต์แวร์', 3, 1),  
-('การสัมมนาเทคโนโลยีใหม่', 'เชิญร่วมงานสัมมนาเทคโนโลยี AI และ Machine Learning', NULL, 2);  
-  
+INSERT INTO Announ_News (title, categories, description, attachment_id, status, teacher_id) VALUES  
+('ประกาศรับสมัครงาน บริษัท ABC', 'ประชาสัมพันธ์', 'บริษัท ABC เปิดรับสมัครตำแหน่งนักพัฒนาซอฟต์แวร์', 3, 'draft', 1),  
+('การสัมมนาเทคโนโลยีใหม่', 'ประชาสัมพันธ์', 'เชิญร่วมงานสัมมนาเทคโนโลยี AI และ Machine Learning', NULL, 'draft', 2),
+('เปิดรับสมัครสหกิจศึกษา ภาคเรียนที่ 1/2568', 'ประชาสัมพันธ์', 'คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร เปิดรับสมัครนักศึกษาที่สนใจเข้าร่วมโครงการสหกิจศึกษา ภาคเรียนที่ 1/2568 โดยนักศึกษาสามารถดูรายละเอียดการรับสมัคร คุณสมบัติ เอกสารที่ต้องเตรียม และกำหนดการได้ทางเว็บไซต์ของคณะ ตั้งแต่วันที่ 1 มกราคม 2568 เป็นต้นไป',
+    6, 'immediate', 1
+),
+('การปฐมนิเทศนักศึกษาสหกิจศึกษา ปี 2568', 'กิจกรรม', 'คณะวิทยาศาสตร์จัดกิจกรรมปฐมนิเทศนักศึกษาสหกิจศึกษาเพื่อให้คำแนะนำขั้นตอนการปฏิบัติงาน ข้อควรระวัง และสิทธิประโยชน์ที่จะได้รับ โดยมีวิทยากรผู้ทรงคุณวุฒิให้ความรู้และตอบข้อสงสัย พร้อมกิจกรรมแลกเปลี่ยนประสบการณ์จากรุ่นพี่',
+    7, 'immediate', 1
+),
+('ประกาศผลรายชื่อนักศึกษาที่ผ่านการคัดเลือกสหกิจศึกษา', 'ประกาศผลการคัดเลือก', 'ประกาศผลรายชื่อนักศึกษาที่ผ่านการคัดเลือกเข้าร่วมโครงการสหกิจศึกษาประจำปีการศึกษา 2568 โดยนักศึกษาที่มีรายชื่อสามารถเข้าระบบออนไลน์เพื่อดูรายละเอียดการส่งเอกสารและขั้นตอนต่อไป',
+    NULL, 'immediate', 1
+),
+('ด่วนเปลี่ยนแปลงกำหนดการส่งเอกสารโครงการสหกิจศึกษา', 'ข่าวด่วน', 'แจ้งเปลี่ยนแปลงกำหนดการส่งเอกสารสำหรับนักศึกษาที่เข้าร่วมโครงการสหกิจศึกษา จากเดิมวันที่ 5 เมษายน 2568 เป็นวันที่ 10 เมษายน 2568 เพื่อความสะดวกของนักศึกษา',
+    8, 'immediate', 1
+);
+
 -- เพิ่มข้อมูลตัวอย่าง StudentDoc  
 INSERT INTO StudentDoc (student_id, doc_type, attachment_id) VALUES  
 (4, 'resume', 4),  
