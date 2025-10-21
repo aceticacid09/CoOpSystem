@@ -413,17 +413,28 @@ const fetchAnnouncements = async () => {
     const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`);
     if (!res.ok) throw new Error('Failed to fetch announcements');
     const data = await res.json();
+    
+    // Debug: Log the first announcement to check structure
+    if (data.announcements.length > 0) {
+      console.log('First announcement:', data.announcements[0]);
+      console.log('Attachments:', data.announcements[0].attachments);
+    }
+    
     announcements.value = data.announcements.map(announcement => ({
       id: announcement.post_id,
-      post_id: announcement.post_id, // Add this line
+      post_id: announcement.post_id,
       title: announcement.title,
       description: announcement.description,
       status: announcement.status,
       date: announcement.created_at,
       publishDate: announcement.publish_date,
-      category: "ประชาสัมพันธ์", // Map category if needed
+      category: "ประชาสัมพันธ์",
       teacher: announcement.teacher,
-      images: announcement.attachments?.map(att => `/uploads/news/${att.filename}`) || []
+      // Extract filename from storage_path: "/app/uploads/news/1761058422_Project-er.png" -> "1761058422_Project-er.png"
+      images: announcement.attachments?.map(att => {
+        const filename = att.storage_path ? att.storage_path.split('/').pop() : att.file_name;
+        return `${API_CONFIG.baseURL}/uploads/news/${filename}`;
+      }).filter(url => !url.endsWith('undefined')) || []
     }));
   } catch (error) {
     console.error('Error fetching announcements:', error);
@@ -712,7 +723,11 @@ const editNews = async (news) => {
           category: fullNews.category,
           status: fullNews.status,
           publish_date: fullNews.publish_date,
-          attachments: fullNews.attachments || []
+          attachments: fullNews.attachments?.map(attachment => ({
+            filename: attachment.filename,
+            file_id: attachment.file_id,
+            preview: `${API_CONFIG.baseURL}/uploads/news/${attachment.filename}`
+          })) || []
         }))
       }
     });

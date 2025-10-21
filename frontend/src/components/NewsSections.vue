@@ -69,7 +69,10 @@ const transformAnnouncement = (announcement) => {
     status: announcement.status,
     teacher: announcement.teacher,
     // Map attachments to images array if they exist
-    images: announcement.attachments?.map(att => `/uploads/news/${att.filename}`) || []
+    images: announcement.attachments?.map(att => {
+        const filename = att.storage_path ? att.storage_path.split('/').pop() : att.file_name;
+        return `${API_CONFIG.baseURL}/uploads/news/${filename}`;
+      }).filter(url => !url.endsWith('undefined')) || []
   };
 };
 
