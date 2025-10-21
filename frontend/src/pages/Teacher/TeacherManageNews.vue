@@ -76,13 +76,10 @@
             </div>
 
             <div class="filter-section">
-                <TabNavigation v-model="activeTab" :tabs="tabs" />
-                <SearchBar v-model="searchText" placeholder="ค้นหาหัวข้อข่าว..." :is-ascending="sortAscending"
-                    @toggle-sort="toggleSort" />
 
                 <div class="status-date-filters">
+                    <CustomDropdown label="หมวดหมู่" v-model="activeTab" :options="tabs" width="300px" />
                     <CustomDropdown label="สถานะ" v-model="statusFilter" :options="statusOptions" width="220px" />
-
                     <div class="filter-group">
                         <label class="filter-label">วันที่</label>
                         <div class="date-filter-dropdown" ref="dateFilterRef">
@@ -124,6 +121,10 @@
                         </div>
                     </div>
                 </div>
+
+                <SearchBar v-model="searchText" placeholder="ค้นหาหัวข้อข่าว..." :is-ascending="sortAscending"
+                    @toggle-sort="toggleSort" />
+
             </div>
 
             <div v-if="isLoading" class="loading-state">
@@ -370,7 +371,6 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import DashboardLayout from '../../components/DashboardLayout.vue';
-import TabNavigation from '../../components/TabNavigation.vue';
 import SearchBar from '../../components/SearchBar.vue';
 import NewsSidePanel from '../../components/NewSidePanel.vue';
 import CustomDropdown from '../../components/CustomDropdown.vue';
@@ -670,8 +670,8 @@ const closeSidePanel = () => {
 const editNews = (news) => {
     // ⭐ ถ้าเป็นแบบร่าง ให้ไปหน้า Create แทน
     if (news.status === 'draft') {
-        router.push({ 
-            name: 'TeacherCreateNews', 
+        router.push({
+            name: 'TeacherCreateNews',
             query: { draftId: news.id } // ส่ง id ไปด้วย
         });
     } else {
@@ -924,7 +924,6 @@ onBeforeUnmount(() => {
 .status-date-filters {
     display: flex;
     gap: 20px;
-    margin-top: 20px;
     flex-wrap: wrap;
     align-items: flex-end;
 }
