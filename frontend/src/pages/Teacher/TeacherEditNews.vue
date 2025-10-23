@@ -558,7 +558,7 @@ watch(publishType, (newType) => {
         } else if (newType === 'scheduled') {
             newsForm.status = 'scheduled';
         } else if (newType === 'immediate') {
-            newsForm.status = 'published';
+            newsForm.status = 'immediate';
             // ตั้งวันที่เป็นวันปัจจุบัน
             const today = new Date();
             newsForm.publishDate = today.toISOString().split('T')[0];
@@ -594,10 +594,9 @@ const handleSave = async () => {
         formData.append('description', newsForm.description.trim());
         formData.append('categories', newsForm.category || 'ประชาสัมพันธ์');
         
-        // ✅ แก้ไข: Map status ให้ถูกต้อง
         const statusMap = {
             'draft': 'draft',
-            'immediate': 'immediate',  // Backend ใช้ 'immediate' ไม่ใช่ 'published'
+            'immediate': 'immediate',
             'scheduled': 'scheduled'
         };
         const finalStatus = statusMap[publishType.value] || 'immediate';
@@ -629,12 +628,12 @@ const handleSave = async () => {
         });
 
         // Debug logs
-        console.log('=== Update Data ===');
-        console.log('Title:', newsForm.title);
-        console.log('Category:', newsForm.category);
-        console.log('Status:', finalStatus);
-        console.log('Existing files:', existingFileIds);
-        console.log('New files:', uploadedImages.value.filter(img => img.file && !img.isExisting).length);
+        // console.log('=== Update Data ===');
+        // console.log('Title:', newsForm.title);
+        // console.log('Category:', newsForm.category);
+        // console.log('Status:', finalStatus);
+        // console.log('Existing files:', existingFileIds);
+        // console.log('New files:', uploadedImages.value.filter(img => img.file && !img.isExisting).length);
 
         const response = await fetch(
             `${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}/${newsForm.id}`, 

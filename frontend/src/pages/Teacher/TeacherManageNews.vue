@@ -427,9 +427,9 @@ const fetchAnnouncements = async () => {
       status: announcement.status,
       date: announcement.created_at,
       publishDate: announcement.publish_date,
-      category: "ประชาสัมพันธ์",
+      category: announcement.categories || announcement.category,
       teacher: announcement.teacher,
-      // Extract filename from storage_path: "/app/uploads/news/1761058422_Project-er.png" -> "1761058422_Project-er.png"
+      // Extract filename from storage_path: "/app/uploads/news/1761058422_filename.png" -> "1761058422_filename.png"
       images: announcement.attachments?.map(att => {
         const filename = att.storage_path ? att.storage_path.split('/').pop() : att.file_name;
         return `${API_CONFIG.baseURL}/uploads/news/${filename}`;
