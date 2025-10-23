@@ -23,9 +23,6 @@ WORKDIR /root/
 COPY --from=builder /app/main .
 COPY --from=builder /app/uploads ./uploads
 
-# Create upload directories at runtime
-RUN mkdir -p /root/uploads/public_docs /root/uploads/documents /root/uploads/news /root/uploads/profile /root/uploads/student_docs
-
 EXPOSE 8000
 
 ENTRYPOINT ["./main"]
