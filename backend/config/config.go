@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -19,42 +20,38 @@ func New() (*Config, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	cfg := &Config{
-		AppPort:   viper.GetString("APP_PORT"),
-		JWTSecret: viper.GetString("JWT_SECRET"),
+		AppPort:   getEnv("APP_PORT", "8000"),
+		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
 	}
 
-	// Set default values
-	if cfg.AppPort == "" {
-		cfg.AppPort = "8080"
-	}
-	if cfg.JWTSecret == "" {
-		cfg.JWTSecret = "your-secret-key"
+	// Check if Railway's DATABASE_URL exists (prioritize it)
+	if databaseURL := os.Getenv("DATABASE_URL"); databaseURL != "" {
+		cfg.DatabaseURL = databaseURL
+	} else {
+		// Fallback to individual variables
+		cfg.DatabaseURL = fmt.Sprintf(
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			getEnv("POSTGRES_HOST", "localhost"),
+			getEnv("POSTGRES_PORT", "5432"),
+			getEnv("POSTGRES_USER", "postgres"),
+			getEnv("POSTGRES_PASSWORD", ""),
+			getEnv("POSTGRES_DB", "postgres"),
+			getEnv("POSTGRES_SSLMODE", "disable"),
+		)
 	}
 
 	// Parse ALLOWED_ORIGINS
-	allowedOrigins := viper.GetString("ALLOWED_ORIGINS")
+	allowedOrigins := getEnv("ALLOWED_ORIGINS", "http://localhost:5173")
 	if allowedOrigins != "" {
 		cfg.AllowedOrigins = strings.Split(allowedOrigins, ",")
-	} else {
-		// Default for development
-		cfg.AllowedOrigins = []string{"http://localhost:5173"}
-	}
-
-	// Build DatabaseURL
-	cfg.DatabaseURL = fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		viper.GetString("POSTGRES_HOST"),
-		viper.GetString("POSTGRES_PORT"),
-		viper.GetString("POSTGRES_USER"),
-		viper.GetString("POSTGRES_PASSWORD"),
-		viper.GetString("POSTGRES_DB"),
-		viper.GetString("POSTGRES_SSLMODE"),
-	)
-
-	// Validate required fields
-	if cfg.AppPort == "" {
-		return nil, fmt.Errorf("APP_PORT is required")
 	}
 
 	return cfg, nil
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
