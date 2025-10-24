@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	"coop/config"
@@ -32,14 +34,21 @@ func (db *PostgresDB) connect(cfg *config.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// Railway requires SSL
+	if os.Getenv("RAILWAY_ENVIRONMENT") != "" {
+		if !strings.Contains(db.databaseURL, "sslmode=") {
+			db.databaseURL += " sslmode=require"
+		}
+	}
+
 	poolConfig, err := pgxpool.ParseConfig(db.databaseURL)
 	if err != nil {
 		return fmt.Errorf("failed to parse Postgres config: %w", err)
 	}
 
-	poolConfig.MaxConns = 25	//max amount for db connection
-	poolConfig.MinConns = 5		//min amount for db standby connection
-	poolConfig.MaxConnLifetime = 10 * time.Minute	//time before restart connection
+	poolConfig.MaxConns = 25
+	poolConfig.MinConns = 5
+	poolConfig.MaxConnLifetime = 10 * time.Minute
 
 	pool, err := pgxpool.ConnectConfig(ctx, poolConfig)
 	if err != nil {
