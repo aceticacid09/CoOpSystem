@@ -1564,8 +1564,7 @@ onBeforeUnmount(() => {
 /* =================================== */
 @media (max-width: 1024px) {
     .news-table {
-        font-size: 14px;
-    }
+        font-size: 14px; }
 
     .col-title {
         min-width: 250px;

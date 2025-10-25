@@ -84,10 +84,12 @@ const formatDate = (dateStr) => {
   return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear() + 543}`;
 };
 
+// ✅ แก้ไข: เพิ่มสถานะครบทุกแบบ
 const getStatusText = (status) => {
   const statusMap = {
-    published: 'เผยแพร่แล้ว',
+    immediate: 'เผยแพร่แล้ว',
     scheduled: 'รอเผยแพร่',
+    draft: 'แบบร่าง',
   };
   return statusMap[status] || status;
 };
@@ -186,6 +188,7 @@ const getStatusText = (status) => {
   font-weight: 500;
 }
 
+/* ✅ แก้ไข: เพิ่ม CSS สำหรับทุกสถานะ */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -197,21 +200,43 @@ const getStatusText = (status) => {
   white-space: nowrap;
 }
 
+/* เผยแพร่แล้ว (immediate หรือ published) */
+.status-badge.immediate,
 .status-badge.published {
   background: #d1fae5;
   color: #065f46;
 }
 
+/* รอเผยแพร่ (scheduled) */
 .status-badge.scheduled {
   background: #fef3c7;
   color: #92400e;
+}
+
+/* แบบร่าง (draft) */
+.status-badge.draft {
+  background: #f3f4f6;
+  color: #4b5563;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: currentColor;
+}
+
+/* สีของ dot ตามสถานะ */
+.status-badge.immediate .status-dot,
+.status-badge.published .status-dot {
+  background: #10b981;
+}
+
+.status-badge.scheduled .status-dot {
+  background: #f59e0b;
+}
+
+.status-badge.draft .status-dot {
+  background: #6b7280;
 }
 
 .news-date {
@@ -280,12 +305,10 @@ const getStatusText = (status) => {
 }
 
 @keyframes savePulse {
-
   0%,
   100% {
     transform: scale(1);
   }
-
   50% {
     transform: scale(1.05);
   }
