@@ -4,19 +4,10 @@
     <section class="history-section container">
       <!-- ========== FILTERS & SEARCH ========== -->
       <div class="history-controls">
-        <CustomDropdown 
-          label="บริษัท" 
-          v-model="selectedCompany" 
-          :options="companies"
-          width="280px"
-        />
-        
-        <SearchBar 
-          v-model="searchText" 
-          placeholder="ค้นหาชื่อตำแหน่ง หรือบริษัท"
-          :is-ascending="isAscending"
-          @toggle-sort="toggleSort"
-        />
+        <CustomDropdown label="บริษัท" v-model="selectedCompany" :options="companies" width="280px" />
+
+        <SearchBar v-model="searchText" placeholder="ค้นหาชื่อตำแหน่ง หรือบริษัท" :is-ascending="isAscending"
+          @toggle-sort="toggleSort" />
       </div>
 
       <!-- ========== HISTORY CARDS ========== -->
@@ -562,10 +553,13 @@ const closePanel = () => {
 }
 
 @keyframes pulseIndicator {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2), 0 3px 12px rgba(245, 158, 11, 0.3);
     transform: scale(1);
   }
+
   50% {
     box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.1), 0 3px 12px rgba(245, 158, 11, 0.3);
     transform: scale(1.02);

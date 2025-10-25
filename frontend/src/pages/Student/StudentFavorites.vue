@@ -22,7 +22,6 @@ const handleRemoveNewsBookmark = (newsId) => {
     savedNewsIds.value.splice(index, 1);
   }
   console.log('Removed news bookmark:', newsId);
-  // ในโปรเจ็กต์จริง: เรียก API เพื่ออัพเดทฐานข้อมูล
 };
 
 const handleRemoveJobBookmark = (jobId) => {
@@ -31,7 +30,6 @@ const handleRemoveJobBookmark = (jobId) => {
     savedJobsIds.value.splice(index, 1);
   }
   console.log('Removed job bookmark:', jobId);
-  // ในโปรเจ็กต์จริง: เรียก API เพื่ออัพเดทฐานข้อมูล
 };
 </script>
 

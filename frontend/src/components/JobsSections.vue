@@ -5,15 +5,7 @@
       <div class="filters">
         <CustomDropdown label="ปีการศึกษา" v-model="selectedYear" :options="academicYears" />
         <CustomDropdown label="ภาควิชา" v-model="selectedDepartment" :options="departments" />
-        <div class="filter-group">
-          <label class="filter-label">ภาคที่</label>
-          <div class="segmented-control">
-            <button v-for="sem in semesters" :key="sem" :class="{ active: selectedSemester === sem }"
-              @click="selectedSemester = sem">
-              {{ sem }}
-            </button>
-          </div>
-        </div>
+        <SegmentedControl label="ภาคที่" v-model="selectedSemester" :options="semesters" />
       </div>
       <SearchBar v-model="searchText" placeholder="ค้นหาชื่อตำแหน่ง, บริษัท หรือ ภาควิชา" :is-ascending="isAscending"
         @toggle-sort="toggleSort" />
@@ -40,6 +32,7 @@ import SearchBar from "../components/SearchBar.vue";
 import CustomDropdown from "../components/CustomDropdown.vue";
 import JobCard from "../components/JobCard.vue";
 import JobSidePanel from "../components/JobSidePanel.vue";
+import SegmentedControl from "../components/SegmentedControl.vue";
 
 const router = useRouter();
 
@@ -151,47 +144,6 @@ const isSaved = (jobId) => savedJobs.value.has(jobId);
   gap: 24px;
   flex-wrap: wrap;
   align-items: center;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.filter-label {
-  font-size: 13px;
-  color: #6b6b6b;
-  font-weight: 500;
-}
-
-.segmented-control {
-  display: inline-flex;
-  border-radius: 12px;
-  background: #f7f9f8;
-  padding: 4px;
-  gap: 4px;
-  border: 1px solid #eef4f2;
-  box-shadow: 0 1px 3px rgba(10, 10, 10, 0.02);
-}
-
-.segmented-control button {
-  min-width: 44px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-weight: 600;
-  color: #556;
-  transition: background .18s, color .18s, transform .08s;
-}
-
-.segmented-control button.active {
-  background: linear-gradient(180deg, #037266, #026b5b);
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(3, 114, 102, 0.12);
-  transform: translateY(-1px);
 }
 
 .jobs-list {

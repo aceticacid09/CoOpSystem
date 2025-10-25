@@ -155,16 +155,7 @@
           <router-link to="/documents" class="nav-item" @click="closeMenu">เอกสาร</router-link>
           <router-link to="/jobs" class="nav-item" @click="closeMenu">ค้นหางาน</router-link>
 
-          <div class="login-dropdown" @click.stop="toggleDropdown">
-            <button class="btn-login" :aria-expanded="isDropdownOpen.toString()">เข้าสู่ระบบ</button>
-            <transition name="fade">
-              <div v-if="isDropdownOpen" class="dropdown-menu">
-                <router-link to="/student" class="dropdown-item" @click="handleLogin">นักศึกษา</router-link>
-                <router-link to="/teacher" class="dropdown-item" @click="handleLogin">อาจารย์</router-link>
-                <router-link to="/company" class="dropdown-item" @click="handleLogin">สถานประกอบการ</router-link>
-              </div>
-            </transition>
-          </div>
+          <router-link to="/login" class="btn-login">เข้าสู่ระบบ</router-link>
         </nav>
       </template>
     </div>
@@ -173,13 +164,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
+const router = useRouter();
 
 // Navigation states
 const isOpen = ref(false);
-const isDropdownOpen = ref(false);
 
 // Dashboard states
 const isNotificationOpen = ref(false);
@@ -200,28 +191,49 @@ const currentRole = computed(() => {
   return '';
 });
 
-// Mock user data based on role
-const userData = {
-  student: {
-    name: 'อัครวิทย์ จันทรัง',
-    role: 'นักศึกษา',
-    avatar: 'https://i.pinimg.com/736x/4e/38/e7/4e38e73208c8a9c2410e4f1d9cb90ee5.jpg'
-  },
-  teacher: {
-    name: 'ผศ.ดร.สัจอาภรณ์ ไววรรยา',
-    role: 'อาจารย์',
-    avatar: 'https://www.cp.su.ac.th/image/crop/856'
-  },
-  company: {
-    name: 'บริษัท เทคโนโลยี จำกัด',
-    role: 'สถานประกอบการ',
-    avatar: 'https://i.pinimg.com/736x/97/0b/4f/970b4f30501bfe2bbc06c08bee62accf.jpg'
+// ✅ ดึงข้อมูลผู้ใช้จาก localStorage
+const currentUser = ref(null);
+
+onMounted(() => {
+  const storedUser = localStorage.getItem('currentUser');
+  if (storedUser) {
+    currentUser.value = JSON.parse(storedUser);
   }
+  
+  // Close dropdowns when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".notification")) {
+      isNotificationOpen.value = false;
+    }
+    if (!e.target.closest(".profile-dropdown")) {
+      isProfileOpen.value = false;
+    }
+  });
+});
+
+// ✅ แปลง role เป็นภาษาไทย
+const roleMapping = {
+  student: 'นักศึกษา',
+  teacher: 'อาจารย์',
+  company: 'สถานประกอบการ'
 };
 
-const userName = computed(() => userData[currentRole.value]?.name || 'ผู้ใช้งาน');
-const userRoleText = computed(() => userData[currentRole.value]?.role || '');
-const userAvatar = computed(() => userData[currentRole.value]?.avatar || '');
+// ✅ คำนวณข้อมูลผู้ใช้แบบ Dynamic
+const userName = computed(() => {
+  if (!currentUser.value) return 'ผู้ใช้งาน';
+  return currentUser.value.name || 'ผู้ใช้งาน';
+});
+
+const userRoleText = computed(() => {
+  if (!currentUser.value) return '';
+  const role = currentRole.value;
+  return roleMapping[role] || '';
+});
+
+const userAvatar = computed(() => {
+  if (!currentUser.value) return 'https://i.pinimg.com/736x/97/0b/4f/970b4f30501bfe2bbc06c08bee62accf.jpg';
+  return currentUser.value.avatar || 'https://i.pinimg.com/736x/97/0b/4f/970b4f30501bfe2bbc06c08bee62accf.jpg';
+});
 
 // Mock notifications
 const notificationCount = ref(6);
@@ -241,15 +253,6 @@ const toggleMenu = () => {
 
 const closeMenu = () => {
   isOpen.value = false;
-};
-
-const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value;
-};
-
-const handleLogin = () => {
-  closeMenu();
-  isDropdownOpen.value = false;
 };
 
 // Dashboard functions
@@ -272,25 +275,10 @@ const closeProfileDropdown = () => {
 };
 
 const handleLogout = () => {
-  // Handle logout logic here
-  console.log('Logging out...');
-  window.location.href = '/';
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('userRole');
+  router.push('/login');
 };
-
-// Close dropdowns when clicking outside
-onMounted(() => {
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".login-dropdown")) {
-      isDropdownOpen.value = false;
-    }
-    if (!e.target.closest(".notification")) {
-      isNotificationOpen.value = false;
-    }
-    if (!e.target.closest(".profile-dropdown")) {
-      isProfileOpen.value = false;
-    }
-  });
-});
 </script>
 
 <style scoped>

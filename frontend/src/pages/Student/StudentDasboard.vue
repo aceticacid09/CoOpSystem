@@ -70,24 +70,14 @@
     <!-- ====================== Available Jobs ====================== -->
     <div class="section-container">
       <div class="section-header">
-        <h3 class="section-title">งานที่เปิดรับสมัคร</h3>
-        <router-link to="/student/jobs" class="view-all-link">ดูทั้งหมด</router-link>
+        <h3 class="section-title">รายการโปรด</h3>
+        <router-link to="/student/favorites" class="view-all-link">ดูทั้งหมด</router-link>
       </div>
 
-      <div class="job-cards">
-        <div v-for="(job, index) in availableJobs" :key="index" class="job-card">
-          <div class="job-card-header">
-            <h4 class="job-card-title">{{ job.title }}</h4>
-            <p class="company-name">{{ job.company }}</p>
-          </div>
-          <div class="job-card-footer">
-            <p class="job-card-deadline">
-              ปิดรับสมัคร {{ job.deadline }}<br />
-              <span class="days-left">(ระยะเวลา {{ job.daysLeft }} วัน)</span>
-            </p>
-            <button class="apply-btn">{{ job.buttonText }}</button>
-          </div>
-        </div>
+      <div class="job-list scrollable-list-jobs">
+        <FavoriteSections :saved-news-ids="savedNewsIds" :saved-jobs-ids="savedJobsIds" :show-bookmark="true"
+        :show-actions="true" @remove-news-bookmark="handleRemoveNewsBookmark"
+        @remove-job-bookmark="handleRemoveJobBookmark" />
       </div>
     </div>
   </DashboardLayout>
@@ -96,6 +86,7 @@
 <script setup>
 import { ref } from 'vue';
 import DashboardLayout from '../../components/DashboardLayout.vue';
+import FavoriteSections from '../../components/FavoriteSections.vue';
 
 /* ====================== Summary Data ====================== */
 const summary = ref({
@@ -112,14 +103,6 @@ const applications = ref([
   { title: 'Mobile Developer - บริษัท Mobi จำกัด', date: '18 มีนาคม 2026', status: 'pending' },
   { title: 'UX/UI Designer - บริษัท Creative จำกัด', date: '20 มีนาคม 2026', status: 'accepted' },
   { title: 'QA Tester - บริษัท Quality จำกัด', date: '22 มีนาคม 2026', status: 'rejected' }
-]);
-
-/* ====================== Available Jobs Data ====================== */
-const availableJobs = ref([
-  { title: 'Frontend Developer', company: 'XXX XXXX (Thailand) Co., Ltd.', deadline: '16 กุมภาพันธ์ 2568', daysLeft: 15, buttonText: 'สมัครงาน' },
-  { title: 'Backend Developer (Intern)', company: 'XXX XXXX (Thailand) Co., Ltd.', deadline: '16 กุมภาพันธ์ 2568', daysLeft: 15, buttonText: 'สมัครงาน' },
-  { title: 'UX/UI Designer', company: 'YYY Design Co., Ltd.', deadline: '20 กุมภาพันธ์ 2568', daysLeft: 10, buttonText: 'สมัครงาน' },
-  { title: 'Mobile Developer', company: 'ABC Tech Co., Ltd.', deadline: '25 กุมภาพันธ์ 2568', daysLeft: 20, buttonText: 'สมัครงาน' }
 ]);
 
 /* ====================== Helper Functions ====================== */
@@ -143,6 +126,26 @@ const statusText = (status) => {
     case 'rejected': return 'ไม่ผ่านการคัดเลือก';
     default: return '';
   }
+};
+
+const savedNewsIds = ref([1, 2, 4]);
+const savedJobsIds = ref([1, 3, 5]);
+
+// Handle remove bookmark
+const handleRemoveNewsBookmark = (newsId) => {
+  const index = savedNewsIds.value.indexOf(newsId);
+  if (index > -1) {
+    savedNewsIds.value.splice(index, 1);
+  }
+  console.log('Removed news bookmark:', newsId);
+};
+
+const handleRemoveJobBookmark = (jobId) => {
+  const index = savedJobsIds.value.indexOf(jobId);
+  if (index > -1) {
+    savedJobsIds.value.splice(index, 1);
+  }
+  console.log('Removed job bookmark:', jobId);
 };
 </script>
 
@@ -270,7 +273,13 @@ const statusText = (status) => {
 }
 
 .scrollable-list {
-  max-height: 360px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.scrollable-list-jobs {
+  max-height: 500px;
   overflow-y: auto;
   padding-right: 6px;
 }

@@ -88,19 +88,30 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router'; 
 import Header from '../components/Header.vue';
+
+const route = useRoute();
+const router = useRouter(); 
 
 const props = defineProps({
   role: {
     type: String,
-    default: 'student', // student, teacher, company
+    default: 'student',
     validator: (value) => ['student', 'teacher', 'company'].includes(value)
   }
 });
 
-const route = useRoute();
+onMounted(() => {
+  const currentUser = localStorage.getItem('currentUser');
+  const userRole = localStorage.getItem('userRole');
+  
+  if (!currentUser || userRole !== props.role) {
+    router.push('/login');
+  }
+});
+
 const isSidebarOpen = ref(true);
 const expandedMenus = ref([]);
 
