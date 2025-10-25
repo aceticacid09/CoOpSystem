@@ -4,15 +4,20 @@
     <section class="history-section container">
       <!-- ========== FILTERS & SEARCH ========== -->
       <div class="history-controls">
-        <CustomDropdown label="บริษัท" v-model="selectedCompany" :options="companies" width="280px" />
+        <div class="filters-row">
+          <CustomDropdown label="สถานะ" v-model="selectedStatus" :options="statusOptions" width="280px" />
+          <CustomDropdown label="บริษัท" v-model="selectedCompany" :options="companies" width="280px" />
+          <DateRangeDropdown label="วันที่สมัคร" v-model:date-from="dateFrom" v-model:date-to="dateTo"placeholder="เลือกช่วงวันที่" />
+        </div>
 
         <SearchBar v-model="searchText" placeholder="ค้นหาชื่อตำแหน่ง หรือบริษัท" :is-ascending="isAscending"
-          @toggle-sort="toggleSort" />
+          @search="handleSearch" @toggle-sort="toggleSort" />
       </div>
 
       <!-- ========== HISTORY CARDS ========== -->
       <div class="history-list">
         <div v-for="record in filteredRecords" :key="record.id" class="history-card">
+          <!-- ยังคงเหมือนเดิม -->
           <div class="card-header">
             <div class="header-info">
               <h3 class="job-title">{{ record.jobTitle }}</h3>
@@ -58,6 +63,7 @@
     </section>
 
     <!-- ========== JOB DETAIL SIDE PANEL ========== -->
+    <!-- ยังคงเหมือนเดิม -->
     <div v-if="selectedJob" class="side-panel-overlay" @click.self="closePanel">
       <div class="side-panel">
         <button class="side-close" @click="closePanel">&times;</button>
@@ -142,13 +148,17 @@ import { ref, computed } from "vue";
 import DashboardLayout from '../../components/DashboardLayout.vue';
 import CustomDropdown from '../../components/CustomDropdown.vue';
 import SearchBar from '../../components/SearchBar.vue';
+import DateRangeDropdown from '../../components/DateRangeDropdown.vue';
 import jobsList from '../../data/jobsData.js';
 
 const selectedCompany = ref("ทั้งหมด");
+const selectedStatus = ref("ทั้งหมด");
 const searchText = ref("");
 const isAscending = ref(true);
 const selectedJob = ref(null);
 const selectedImageIndex = ref(0);
+const dateFrom = ref("");
+const dateTo = ref("");
 
 const monthsThai = [
   "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
@@ -159,7 +169,7 @@ const monthsThai = [
 const applicationRecords = ref([
   {
     id: 1,
-    jobId: 1, // อ้างอิงไปยัง job id ใน jobsData.js
+    jobId: 1,
     applicationDate: "01/01/68",
     stages: [
       { name: "กดสมัคร", status: "passed" },
@@ -259,9 +269,46 @@ const companies = computed(() => {
   return ["ทั้งหมด", ...Array.from(uniqueCompanies)];
 });
 
+// สร้างรายการสถานะทั้งหมด
+const statusOptions = computed(() => {
+  return [
+    "ทั้งหมด",
+    "กำลังสมัคร",
+    "กำลังสัมภาษณ์",
+    "รอพิจารณา",
+    "ผ่านการคัดเลือก",
+    "ไม่ผ่านการคัดเลือก"
+  ];
+});
+
+// ฟังก์ชันแปลงสถานะเป็น category
+const getStatusCategory = (stages) => {
+  const rejectedStage = stages.find(s => s.status === "rejected");
+  if (rejectedStage) return "ไม่ผ่านการคัดเลือก";
+
+  const currentStage = stages.find(s => s.status === "current");
+  const passedStages = stages.filter(s => s.status === "passed");
+
+  if (passedStages.length === stages.length) return "ผ่านการคัดเลือก";
+
+  if (currentStage) {
+    const currentIndex = stages.findIndex(s => s.status === "current");
+    if (currentIndex === 0 || currentIndex === 1) return "กำลังสมัคร";
+    if (currentIndex === 2) return "กำลังสัมภาษณ์";
+    if (currentIndex === 3) return "รอพิจารณา";
+  }
+
+  return "กำลังสมัคร";
+};
+
 // ฟังก์ชันสำหรับ toggle การเรียงลำดับ
 const toggleSort = () => {
   isAscending.value = !isAscending.value;
+};
+
+const handleSearch = () => {
+  // ถ้าต้องการทำอะไรเพิ่มเมื่อคลิกปุ่มค้นหา
+  console.log('Search triggered:', searchText.value);
 };
 
 const formatDate = (dateStr) => {
@@ -327,19 +374,55 @@ const getConnectorClass = (stages, index) => {
 };
 
 const filteredRecords = computed(() => {
-  // กรองตามบริษัทและคำค้นหา
   let filtered = enrichedRecords.value.filter(record => {
-    if (selectedCompany.value !== "ทั้งหมด" && record.company !== selectedCompany.value) return false;
+    // กรองบริษัท
+    if (selectedCompany.value !== "ทั้งหมด" && record.company !== selectedCompany.value) {
+      return false;
+    }
+
+    // กรองสถานะ
+    if (selectedStatus.value !== "ทั้งหมด") {
+      const statusCategory = getStatusCategory(record.stages);
+      if (statusCategory !== selectedStatus.value) {
+        return false;
+      }
+    }
+
+    // กรองคำค้นหา
     if (searchText.value.trim()) {
       const txt = searchText.value.toLowerCase();
-      return record.jobTitle.toLowerCase().includes(txt) || record.company.toLowerCase().includes(txt);
+      if (!record.jobTitle.toLowerCase().includes(txt) && !record.company.toLowerCase().includes(txt)) {
+        return false;
+      }
     }
+
+    // เพิ่มการกรองตามวันที่
+    if (dateFrom.value && dateTo.value) {
+      const recordDate = parseThaiDate(record.applicationDate);
+      const from = new Date(dateFrom.value);
+      const to = new Date(dateTo.value);
+      to.setHours(23, 59, 59, 999);
+      
+      if (recordDate < from || recordDate > to) {
+        return false;
+      }
+    }
+
     return true;
   });
 
   // เรียงลำดับตามวันที่สมัคร
   return isAscending.value ? filtered : [...filtered].reverse();
 });
+
+const parseThaiDate = (dateStr) => {
+  // Format: "01/01/68" (dd/mm/yy)
+  const parts = dateStr.split("/");
+  const day = parseInt(parts[0]);
+  const month = parseInt(parts[1]) - 1;
+  const year = parseInt(parts[2]) + 2500; // แปลง พ.ศ. เป็น ค.ศ.
+  return new Date(year - 543, month, day);
+};
 
 const openPanel = (record) => {
   selectedJob.value = record;
@@ -368,21 +451,27 @@ const closePanel = () => {
   grid-template-columns: 280px 1fr;
   gap: 16px;
   margin-bottom: 24px;
-  align-items: end;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .history-controls {
-    grid-template-columns: 1fr;
-  }
-}
-
-.filter-row {
+.history-controls {
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.filters-row {
+  display: flex;
+  gap: 16px;
   flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+@media (max-width: 900px) {
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 /* ========== HISTORY CARDS ========== */

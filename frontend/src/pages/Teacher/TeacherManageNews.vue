@@ -80,46 +80,8 @@
                 <div class="status-date-filters">
                     <CustomDropdown label="หมวดหมู่" v-model="activeTab" :options="tabs" width="300px" />
                     <CustomDropdown label="สถานะ" v-model="statusFilter" :options="statusOptions" width="220px" />
-                    <div class="filter-group">
-                        <label class="filter-label">วันที่</label>
-                        <div class="date-filter-dropdown" ref="dateFilterRef">
-                            <button class="date-dropdown-button" @click.stop="isDateFilterOpen = !isDateFilterOpen">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg>
-                                <span>{{ dateRangeDisplay }}</span>
-                                <svg class="dropdown-arrow" :class="{ open: isDateFilterOpen }"
-                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                    fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </button>
-                            <transition name="dropdown-fade">
-                                <div v-if="isDateFilterOpen" class="date-dropdown-menu">
-                                    <div class="date-inputs">
-                                        <div class="input-group">
-                                            <label>จาก</label>
-                                            <input type="date" v-model="dateFrom" class="date-input" />
-                                        </div>
-                                        <div class="input-group">
-                                            <label>ถึง</label>
-                                            <input type="date" v-model="dateTo" class="date-input" />
-                                        </div>
-                                    </div>
-                                    <div class="date-actions">
-                                        <button class="btn-clear-date" @click="clearDateFilter">ล้าง</button>
-                                        <button class="btn-apply-date" @click="applyDateFilter">ใช้งาน</button>
-                                    </div>
-                                </div>
-                            </transition>
-                        </div>
-                    </div>
+                    <DateRangeDropdown label="วันที่" v-model:date-from="dateFrom" v-model:date-to="dateTo"
+                        @apply="applyDateFilter" @clear="clearDateFilter" />
                 </div>
 
                 <SearchBar v-model="searchText" placeholder="ค้นหาหัวข้อข่าว..." :is-ascending="sortAscending"
@@ -374,6 +336,7 @@ import DashboardLayout from '../../components/DashboardLayout.vue';
 import SearchBar from '../../components/SearchBar.vue';
 import NewsSidePanel from '../../components/NewSidePanel.vue';
 import CustomDropdown from '../../components/CustomDropdown.vue';
+import DateRangeDropdown from '../../components/DateRangeDropdown.vue';
 import { API_CONFIG } from '../../../config/api';
 
 const router = useRouter();
@@ -391,10 +354,6 @@ const sortAscending = ref(false);
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 
-// Dropdown/Refs
-const isDateFilterOpen = ref(false);
-const dateFilterRef = ref(null);
-
 // Selection/Bulk Actions
 const selectAll = ref(false);
 const selectedNews = ref([]);
@@ -407,39 +366,39 @@ const newsToDelete = ref(null);
 // Data
 const announcements = ref([]);
 const fetchAnnouncements = async () => {
-  isLoading.value = true;
-  try {
-    const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`);
-    if (!res.ok) throw new Error('Failed to fetch announcements');
-    const data = await res.json();
-    
-    // Debug: Log the first announcement to check structure
-    if (data.announcements.length > 0) {
-      console.log('First announcement:', data.announcements[0]);
-      console.log('Attachments:', data.announcements[0].attachments);
+    isLoading.value = true;
+    try {
+        const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.announcements}`);
+        if (!res.ok) throw new Error('Failed to fetch announcements');
+        const data = await res.json();
+
+        // Debug: Log the first announcement to check structure
+        if (data.announcements.length > 0) {
+            console.log('First announcement:', data.announcements[0]);
+            console.log('Attachments:', data.announcements[0].attachments);
+        }
+
+        announcements.value = data.announcements.map(announcement => ({
+            id: announcement.post_id,
+            post_id: announcement.post_id,
+            title: announcement.title,
+            description: announcement.description,
+            status: announcement.status,
+            date: announcement.created_at,
+            publishDate: announcement.publish_date,
+            category: announcement.categories || announcement.category,
+            teacher: announcement.teacher,
+            // Extract filename from storage_path: "/app/uploads/news/1761058422_filename.png" -> "1761058422_filename.png"
+            images: announcement.attachments?.map(att => {
+                const filename = att.storage_path ? att.storage_path.split('/').pop() : att.file_name;
+                return `${API_CONFIG.baseURL}/uploads/news/${filename}`;
+            }).filter(url => !url.endsWith('undefined')) || []
+        }));
+    } catch (error) {
+        console.error('Error fetching announcements:', error);
+    } finally {
+        isLoading.value = false;
     }
-    
-    announcements.value = data.announcements.map(announcement => ({
-      id: announcement.post_id,
-      post_id: announcement.post_id,
-      title: announcement.title,
-      description: announcement.description,
-      status: announcement.status,
-      date: announcement.created_at,
-      publishDate: announcement.publish_date,
-      category: announcement.categories || announcement.category,
-      teacher: announcement.teacher,
-      // Extract filename from storage_path: "/app/uploads/news/1761058422_filename.png" -> "1761058422_filename.png"
-      images: announcement.attachments?.map(att => {
-        const filename = att.storage_path ? att.storage_path.split('/').pop() : att.file_name;
-        return `${API_CONFIG.baseURL}/uploads/news/${filename}`;
-      }).filter(url => !url.endsWith('undefined')) || []
-    }));
-  } catch (error) {
-    console.error('Error fetching announcements:', error);
-  } finally {
-    isLoading.value = false;
-  }
 };
 
 const tabs = ["ข่าวทั้งหมด", "ประชาสัมพันธ์", "ข่าวด่วน", "กิจกรรม", "ประกาศผลการคัดเลือก"];
@@ -450,14 +409,6 @@ let statusCheckInterval;
 // =====================================
 // 2. COMPUTED PROPERTIES
 // =====================================
-
-// Date range display
-const dateRangeDisplay = computed(() => {
-    if (dateFrom.value && dateTo.value) {
-        return `${formatDateShort(dateFrom.value)} - ${formatDateShort(dateTo.value)}`;
-    }
-    return 'เลือกช่วงวันที่';
-});
 
 // Stats
 const publishedCount = computed(() =>
@@ -592,7 +543,7 @@ const updateScheduledNews = () => {
     announcements.value = announcements.value.map(news => {
         if (news.status === 'scheduled' && news.publishDate) {
             const scheduleDateTime = new Date(news.publishDate);
-            
+
             // เปลี่ยนสถานะเป็น immediate เมื่อถึงเวลาที่กำหนด
             if (scheduleDateTime <= now) {
                 updated = true;
@@ -665,14 +616,6 @@ const toggleSort = () => {
     sortAscending.value = !sortAscending.value;
 };
 
-const applyDateFilter = () => {
-    isDateFilterOpen.value = false;
-};
-
-const clearDateFilter = () => {
-    dateFrom.value = '';
-    dateTo.value = '';
-};
 const toggleSelectAll = () => {
     if (selectAll.value) {
         selectedNews.value = paginatedNews.value.map(news => news.id);
@@ -804,12 +747,6 @@ const bulkDelete = () => {
     showDeleteConfirm.value = true;
 };
 
-const handleClickOutside = (event) => {
-    if (isDateFilterOpen.value && dateFilterRef.value && !dateFilterRef.value.contains(event.target)) {
-        isDateFilterOpen.value = false;
-    }
-};
-
 // =====================================
 // 4. WATCHERS & LIFECYCLE HOOKS
 // =====================================
@@ -829,16 +766,12 @@ watch(paginatedNews, () => {
 
 // In the same file
 onMounted(async () => {
-    document.addEventListener('click', handleClickOutside);
     await fetchAnnouncements();
-
-    // Update scheduled announcements periodically
     updateScheduledNews();
     statusCheckInterval = setInterval(updateScheduledNews, 60000);
 });
 
 onBeforeUnmount(() => {
-    document.removeEventListener('click', handleClickOutside);
     if (statusCheckInterval) {
         clearInterval(statusCheckInterval);
     }
@@ -999,153 +932,6 @@ onBeforeUnmount(() => {
     gap: 20px;
     flex-wrap: wrap;
     align-items: flex-end;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.filter-label {
-    font-size: 13px;
-    color: #6b6b6b;
-    font-weight: 500;
-}
-
-.date-filter-dropdown {
-    position: relative;
-    width: 400px;
-    margin-bottom: 10px;
-}
-
-.date-dropdown-button {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    width: 100%;
-    padding: 9px 14px;
-    background: #fff;
-    border: 1px solid #e5e7e6;
-    border-radius: 10px;
-    font-size: 14px;
-    color: #333;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(10, 10, 10, 0.02);
-}
-
-.date-dropdown-button:hover {
-    border-color: #037266;
-    box-shadow: 0 4px 12px rgba(3, 114, 102, 0.08);
-}
-
-.date-dropdown-button svg:first-child {
-    flex-shrink: 0;
-    color: #666;
-}
-
-.date-dropdown-button span {
-    flex: 1;
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.dropdown-arrow {
-    transition: transform 0.25s ease;
-    flex-shrink: 0;
-    margin-left: 8px;
-}
-
-.dropdown-arrow.open {
-    transform: rotate(180deg);
-}
-
-.date-dropdown-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    width: 100%;
-    background: #fff;
-    border: 1px solid #e5e7e6;
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(6, 20, 18, 0.12);
-    z-index: 100;
-    padding: 12px;
-}
-
-.date-inputs {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-}
-
-.input-group label {
-    font-size: 13px;
-    color: #666;
-    font-weight: 600;
-}
-
-.date-input {
-    padding: 10px 12px;
-    border: 2px solid #e5e5e5;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: "Kanit", sans-serif;
-    transition: all 0.2s;
-}
-
-.date-input:focus {
-    outline: none;
-    border-color: #037266;
-}
-
-.date-actions {
-    display: flex;
-    gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid #f0f0f0;
-}
-
-.btn-clear-date,
-.btn-apply-date {
-    flex: 1;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-clear-date {
-    background: #f0f0f0;
-    color: #666;
-}
-
-.btn-clear-date:hover {
-    background: #e0e0e0;
-}
-
-.btn-apply-date {
-    background: #037266;
-    color: #fff;
-}
-
-.btn-apply-date:hover {
-    background: #026b5b;
 }
 
 /* =================================== */

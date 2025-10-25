@@ -1,3 +1,4 @@
+<!-- frontend/src/components/JobsSections.vue -->
 <template>
   <section class="jobs-section container">
     <!-- Filters เหมือนเดิม -->

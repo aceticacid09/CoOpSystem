@@ -17,6 +17,7 @@
         </div>
 
         <div class="stats-overview">
+            <!-- ยังคงเหมือนเดิม -->
             <div class="stat-card">
                 <div class="stat-icon approved">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -75,106 +76,47 @@
             </div>
         </div>
 
+        <!-- ส่วน Filter ใหม่ที่ใช้ Components -->
         <div class="filter-section">
-            <div class="tabs">
-                <button v-for="tab in tabs" :key="tab.value" class="tab-btn"
-                    :class="{ active: activeTab === tab.value }" @click="activeTab = tab.value">
-                    {{ tab.label }}
-                </button>
+            <div class="filters-row">
+                <CustomDropdown 
+                    label="สถานะ" 
+                    v-model="activeTabLabel" 
+                    :options="tabOptions" 
+                    width="230px" 
+                />
+                <CustomDropdown 
+                    label="ตำแหน่งงาน" 
+                    v-model="selectedJobTitle" 
+                    :options="jobTitles" 
+                    width="230px" 
+                />
+                <CustomDropdown 
+                    label="ปีการศึกษา" 
+                    v-model="selectedYear" 
+                    :options="academicYears" 
+                    width="230px" 
+                />
+                <CustomDropdown 
+                    label="ภาควิชา" 
+                    v-model="selectedDepartment" 
+                    :options="departments" 
+                    width="250px" 
+                />
+                <SegmentedControl 
+                    label="ภาคที่" 
+                    v-model="selectedSemester" 
+                    :options="semesters" 
+                />
             </div>
 
-            <div class="search-sort">
-                <div class="search-box">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    <input type="text" v-model="searchText" placeholder="ค้นหาชื่อตำแหน่งงาน..." />
-                </div>
-                <button class="btn-search" @click="handleSearch">ค้นหา</button>
-
-                <div class="filter-dropdown" ref="yearFilterRef">
-                    <button class="btn-filter-extra" @click="isYearFilterOpen = !isYearFilterOpen">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                            <line x1="16" y1="2" x2="16" y2="6" />
-                            <line x1="8" y1="2" x2="8" y2="6" />
-                            <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                        ปีการศึกษา
-                        <span v-if="selectedYear !== 'ทั้งหมด'" class="filter-count">1</span>
-                    </button>
-                    <transition name="dropdown-fade">
-                        <div v-if="isYearFilterOpen" class="filter-menu">
-                            <label v-for="year in academicYears" :key="year" class="filter-radio">
-                                <input type="radio" :value="year" v-model="selectedYear" />
-                                <span>{{ year }}</span>
-                            </label>
-                        </div>
-                    </transition>
-                </div>
-
-                <div class="filter-dropdown" ref="semesterFilterRef">
-                    <button class="btn-filter-extra" @click="isSemesterFilterOpen = !isSemesterFilterOpen">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                        </svg>
-                        ภาคเรียน
-                        <span v-if="selectedSemester !== 'ทั้งหมด'" class="filter-count">1</span>
-                    </button>
-                    <transition name="dropdown-fade">
-                        <div v-if="isSemesterFilterOpen" class="filter-menu">
-                            <label v-for="sem in semesters" :key="sem" class="filter-radio">
-                                <input type="radio" :value="sem" v-model="selectedSemester" />
-                                <span>{{ sem }}</span>
-                            </label>
-                        </div>
-                    </transition>
-                </div>
-
-                <div class="filter-dropdown" ref="departmentFilterRef">
-                    <button class="btn-filter-extra" @click="isDepartmentFilterOpen = !isDepartmentFilterOpen">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                        ภาควิชา
-                        <span v-if="selectedDepartment !== 'ทั้งหมด'" class="filter-count">1</span>
-                    </button>
-                    <transition name="dropdown-fade">
-                        <div v-if="isDepartmentFilterOpen" class="filter-menu">
-                            <label v-for="dept in departments" :key="dept" class="filter-radio">
-                                <input type="radio" :value="dept" v-model="selectedDepartment" />
-                                <span>{{ dept }}</span>
-                            </label>
-                        </div>
-                    </transition>
-                </div>
-
-                <button @click="toggleSort" class="btn-sort"
-                    :title="sortAscending ? 'เรียงจากเก่าสุด' : 'เรียงจากใหม่สุด'">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="#9CA3AF"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18M3 12h12M3 18h6" />
-                    </svg>
-                </button>
-
-                <button v-if="hasActiveFilters" class="btn-clear-all" @click="clearAllFilters">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                    ล้าง
-                </button>
-            </div>
+            <SearchBar 
+                v-model="searchText" 
+                placeholder="ค้นหาชื่อตำแหน่งงาน..." 
+                :is-ascending="sortAscending"
+                @search="handleSearch" 
+                @toggle-sort="toggleSort" 
+            />
         </div>
 
         <div v-if="isLoading" class="loading-state">
@@ -496,27 +438,24 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import CustomDropdown from './CustomDropdown.vue';
+import SegmentedControl from './SegmentedControl.vue';
+import SearchBar from './SearchBar.vue';
 
 // =======================================================
 // STATE
 // =======================================================
 const isLoading = ref(false);
 const activeTab = ref('all');
+const activeTabLabel = ref('ทั้งหมด');
 const searchText = ref('');
-const selectedYear = ref('ทั้งหมด');
-const selectedSemester = ref('ทั้งหมด');
+const selectedYear = ref(2568);
+const selectedSemester = ref(1);
 const selectedDepartment = ref('ทั้งหมด');
+const selectedJobTitle = ref('ทั้งหมด');
 const sortAscending = ref(false);
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
-
-// Dropdown states
-const isYearFilterOpen = ref(false);
-const isSemesterFilterOpen = ref(false);
-const isDepartmentFilterOpen = ref(false);
-const yearFilterRef = ref(null);
-const semesterFilterRef = ref(null);
-const departmentFilterRef = ref(null);
 
 // Selection states
 const selectAll = ref(false);
@@ -528,8 +467,8 @@ const showDeleteConfirm = ref(false);
 const jobToDelete = ref(null);
 
 // Data
-const academicYears = ['ทั้งหมด', 2568, 2567, 2566, 2565, 2564, 2563, 2562, 2561, 2560, 2559];
-const semesters = ['ทั้งหมด', 1, 2, 3];
+const academicYears = [2568, 2567, 2566, 2565, 2564, 2563, 2562, 2561, 2560, 2559];
+const semesters = [1, 2, 3];
 const departments = [
     'ทั้งหมด',
     'ภาควิชาคณิตศาสตร์',
@@ -569,6 +508,14 @@ const tabs = computed(() => [
     { value: 'ไม่ผ่านการตรวจสอบ', label: 'ไม่ผ่านการตรวจสอบ', count: rejectedCount.value }
 ]);
 
+const tabOptions = computed(() => tabs.value.map(tab => tab.label));
+
+// สร้าง jobTitles จาก mockJobsData
+const jobTitles = computed(() => {
+    const titles = ['ทั้งหมด', ...new Set(mockJobsData.value.map(job => job.title))];
+    return titles;
+});
+
 const approvedCount = computed(() =>
     mockJobsData.value.filter(j => j.status === 'ผ่านการตรวจสอบ').length
 );
@@ -600,18 +547,19 @@ const filteredJobs = computed(() => {
     }
 
     // Filter by year
-    if (selectedYear.value !== 'ทั้งหมด') {
-        result = result.filter(job => job.year === selectedYear.value);
-    }
+    result = result.filter(job => job.year === selectedYear.value);
 
     // Filter by semester
-    if (selectedSemester.value !== 'ทั้งหมด') {
-        result = result.filter(job => job.semester === selectedSemester.value);
-    }
+    result = result.filter(job => job.semester === selectedSemester.value);
 
     // Filter by department
     if (selectedDepartment.value !== 'ทั้งหมด') {
         result = result.filter(job => job.department === selectedDepartment.value);
+    }
+
+    // Filter by job title
+    if (selectedJobTitle.value !== 'ทั้งหมด') {
+        result = result.filter(job => job.title === selectedJobTitle.value);
     }
 
     // Sort
@@ -664,13 +612,6 @@ const visiblePages = computed(() => {
     return pages;
 });
 
-const hasActiveFilters = computed(() =>
-    selectedYear.value !== 'ทั้งหมด' ||
-    selectedSemester.value !== 'ทั้งหมด' ||
-    selectedDepartment.value !== 'ทั้งหมด' ||
-    searchText.value
-);
-
 // =======================================================
 // METHODS
 // =======================================================
@@ -701,13 +642,6 @@ const getEmptyMessage = () => {
 
 const toggleSort = () => {
     sortAscending.value = !sortAscending.value;
-};
-
-const clearAllFilters = () => {
-    searchText.value = '';
-    selectedYear.value = 'ทั้งหมด';
-    selectedSemester.value = 'ทั้งหมด';
-    selectedDepartment.value = 'ทั้งหมด';
 };
 
 const handleSearch = () => {
@@ -772,22 +706,20 @@ const bulkDelete = () => {
     showDeleteConfirm.value = true;
 };
 
-const handleClickOutside = (event) => {
-    if (yearFilterRef.value && !yearFilterRef.value.contains(event.target)) {
-        isYearFilterOpen.value = false;
-    }
-    if (semesterFilterRef.value && !semesterFilterRef.value.contains(event.target)) {
-        isSemesterFilterOpen.value = false;
-    }
-    if (departmentFilterRef.value && !departmentFilterRef.value.contains(event.target)) {
-        isDepartmentFilterOpen.value = false;
-    }
-};
-
 // =======================================================
 // WATCHERS
 // =======================================================
-watch([activeTab, searchText, selectedYear, selectedSemester, selectedDepartment], () => {
+watch(activeTabLabel, (newLabel) => {
+    const tab = tabs.value.find(t => t.label === newLabel);
+    if (tab) {
+        activeTab.value = tab.value;
+    }
+    currentPage.value = 1;
+    selectedJobs.value = [];
+    selectAll.value = false;
+});
+
+watch([searchText, selectedYear, selectedSemester, selectedDepartment, selectedJobTitle], () => {
     currentPage.value = 1;
     selectedJobs.value = [];
     selectAll.value = false;
@@ -804,7 +736,6 @@ watch(paginatedJobs, () => {
 // LIFECYCLE
 // =======================================================
 onMounted(() => {
-    document.addEventListener('click', handleClickOutside);
     isLoading.value = true;
     setTimeout(() => {
         isLoading.value = false;
@@ -812,7 +743,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    document.removeEventListener('click', handleClickOutside);
+    // Cleanup if needed
 });
 </script>
 
@@ -965,205 +896,12 @@ onBeforeUnmount(() => {
     border: 1px solid #eef0ef;
 }
 
-.tabs {
+.filters-row {
     display: flex;
-    gap: 25px;
-    border-bottom: 1px solid #eee;
+    gap: 20px;
     margin-bottom: 20px;
     flex-wrap: wrap;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
-    color: #555;
-    padding-bottom: 8px;
-    cursor: pointer;
-    position: relative;
-    font-weight: 500;
-}
-
-.tab-btn.active {
-    color: #037266;
-    font-weight: 600;
-}
-
-.tab-btn.active::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -1px;
-    width: 100%;
-    height: 2px;
-    background: #037266;
-}
-
-.search-sort {
-    display: flex;
-    align-items: center;
-    margin: 25px 0;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.search-box {
-    flex: 1;
-    min-width: 250px;
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-box svg {
-    position: absolute;
-    left: 14px;
-    color: #999;
-}
-
-.search-box input {
-    width: 100%;
-    padding: 11px 14px 11px 42px;
-    border: 2px solid #e5e5e5;
-    border-radius: 10px;
-    font-size: 14px;
-    transition: all 0.2s;
-    font-family: "Kanit", sans-serif;
-}
-
-.search-box input:focus {
-    outline: none;
-    border-color: #037266;
-    background: #f0f8f7;
-}
-
-.btn-search {
-    background: #037266;
-    color: #fff;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow: 0 6px 18px rgba(3, 114, 102, 0.08);
-    font-size: 14px;
-    transition: all 0.2s;
-    height: 45px;
-    width: 90px;
-}
-
-.btn-search:hover {
-    transform: translateY(-2px);
-}
-
-.filter-dropdown {
-    position: relative;
-}
-
-.btn-filter-extra {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 16px;
-    background: #f1f1f1;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #555;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-    height: 45px;
-    min-width: 150px;
-}
-
-.btn-filter-extra:hover {
-    background: #e0e0e0;
-}
-
-.filter-count {
-    background: #037266;
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.filter-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    background: #fff;
-    border: 1px solid #e5e7e6;
-    border-radius: 12px;
-    padding: 12px;
-    min-width: 200px;
-    max-height: 300px;
-    overflow-y: auto;
-    box-shadow: 0 8px 24px rgba(6, 20, 18, 0.12);
-    z-index: 100;
-}
-
-.filter-radio {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-.filter-radio:hover {
-    background: #f7f9f8;
-}
-
-.filter-radio input[type="radio"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #037266;
-}
-
-.filter-radio span {
-    font-size: 14px;
-    color: #333;
-    font-weight: 500;
-}
-
-.btn-sort {
-    background: #f1f1f1;
-    border: none;
-    padding: 8px 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    height: 45px;
-    width: 70px;
-}
-
-.btn-sort:hover {
-    background: #e0e0e0;
-}
-
-.btn-clear-all {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 16px;
-    background: #fee2e2;
-    border: 2px solid #fecaca;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #dc2626;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-clear-all:hover {
-    background: #fecaca;
+    align-items: flex-end;
 }
 
 /* =================================== */
