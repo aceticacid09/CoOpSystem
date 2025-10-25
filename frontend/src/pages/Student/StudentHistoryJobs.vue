@@ -7,7 +7,8 @@
         <div class="filters-row">
           <CustomDropdown label="สถานะ" v-model="selectedStatus" :options="statusOptions" width="280px" />
           <CustomDropdown label="บริษัท" v-model="selectedCompany" :options="companies" width="280px" />
-          <DateRangeDropdown label="วันที่สมัคร" v-model:date-from="dateFrom" v-model:date-to="dateTo"placeholder="เลือกช่วงวันที่" />
+          <DateRangeDropdown label="วันที่สมัคร" v-model:date-from="dateFrom" v-model:date-to="dateTo"
+            placeholder="เลือกช่วงวันที่" />
         </div>
 
         <SearchBar v-model="searchText" placeholder="ค้นหาชื่อตำแหน่ง หรือบริษัท" :is-ascending="isAscending"
@@ -55,8 +56,8 @@
           </div>
 
           <div class="card-actions">
-            <button class="btn-detail" @click="openPanel(record)">ดูประกาศงาน</button>
-            <button class="btn-application">ดูใบสมัครงาน</button>
+            <button class="btn-detail" @click="openJobPanel(record)">ดูประกาศงาน</button>
+            <button class="btn-application" @click="openApplicationPanel(record)">ดูใบสมัครงาน</button>
           </div>
         </div>
       </div>
@@ -140,6 +141,11 @@
         </div>
       </div>
     </div>
+
+    <!-- ========== APPLICATION SIDE PANEL ========== -->
+    <ApplicationSidePanel v-if="selectedApplication" :show="showApplicationPanel"
+      :job-data="selectedApplication.jobData" :application-data="selectedApplication.applicationData"
+      :application-date="selectedApplication.applicationDate" @close="closeApplicationPanel" />
   </DashboardLayout>
 </template>
 
@@ -150,6 +156,11 @@ import CustomDropdown from '../../components/CustomDropdown.vue';
 import SearchBar from '../../components/SearchBar.vue';
 import DateRangeDropdown from '../../components/DateRangeDropdown.vue';
 import jobsList from '../../data/jobsData.js';
+import ApplicationSidePanel from '../../components/ApplicationSidePanel.vue';
+import { mockApplicationData, formatThaiDate } from '../../data/applicationData.js';
+
+const showApplicationPanel = ref(false);
+const selectedApplication = ref(null);
 
 const selectedCompany = ref("ทั้งหมด");
 const selectedStatus = ref("ทั้งหมด");
@@ -165,7 +176,6 @@ const monthsThai = [
   "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
 ];
 
-// ใช้ข้อมูลจาก jobsData.js โดยสร้าง mapping ระหว่าง jobId กับสถานะการสมัคร
 const applicationRecords = ref([
   {
     id: 1,
@@ -209,8 +219,8 @@ const applicationRecords = ref([
     applicationDate: "20/04/68",
     stages: [
       { name: "กดสมัคร", status: "passed" },
-      { name: "ตรวจสอบเอกสาร", status: "rejected" },
-      { name: "สัมภาษณ์", status: "pending" },
+      { name: "ตรวจสอบเอกสาร", status: "passed" },
+      { name: "สัมภาษณ์", status: "rejected" },
       { name: "รอพิจารณา", status: "pending" },
       { name: "ประกาศผล", status: "pending" }
     ]
@@ -269,36 +279,34 @@ const companies = computed(() => {
   return ["ทั้งหมด", ...Array.from(uniqueCompanies)];
 });
 
-// สร้างรายการสถานะทั้งหมด
 const statusOptions = computed(() => {
   return [
     "ทั้งหมด",
-    "กำลังสมัคร",
-    "กำลังสัมภาษณ์",
+    "ตรวจสอบเอกสาร",
+    "สัมภาษณ์",
     "รอพิจารณา",
     "ผ่านการคัดเลือก",
     "ไม่ผ่านการคัดเลือก"
   ];
 });
 
-// ฟังก์ชันแปลงสถานะเป็น category
 const getStatusCategory = (stages) => {
+  // ถ้ามี stage ไหนที่ rejected = ไม่ผ่านการคัดเลือก
   const rejectedStage = stages.find(s => s.status === "rejected");
   if (rejectedStage) return "ไม่ผ่านการคัดเลือก";
 
   const currentStage = stages.find(s => s.status === "current");
   const passedStages = stages.filter(s => s.status === "passed");
 
+  // ถ้าผ่านทุก stage = ผ่านการคัดเลือก
   if (passedStages.length === stages.length) return "ผ่านการคัดเลือก";
 
+  // ถ้ามี current stage ให้แสดงชื่อ stage นั้น
   if (currentStage) {
-    const currentIndex = stages.findIndex(s => s.status === "current");
-    if (currentIndex === 0 || currentIndex === 1) return "กำลังสมัคร";
-    if (currentIndex === 2) return "กำลังสัมภาษณ์";
-    if (currentIndex === 3) return "รอพิจารณา";
+    return currentStage.name;
   }
 
-  return "กำลังสมัคร";
+  return "ตรวจสอบเอกสาร";
 };
 
 // ฟังก์ชันสำหรับ toggle การเรียงลำดับ
@@ -307,7 +315,6 @@ const toggleSort = () => {
 };
 
 const handleSearch = () => {
-  // ถ้าต้องการทำอะไรเพิ่มเมื่อคลิกปุ่มค้นหา
   console.log('Search triggered:', searchText.value);
 };
 
@@ -319,18 +326,21 @@ const formatDate = (dateStr) => {
   return `${day} ${monthsThai[month]} ${year}`;
 };
 
+// ✅ แก้ไข: ฟังก์ชันแสดงสถานะปัจจุบันในการ์ด
 const getCurrentStage = (stages) => {
-  const currentStage = stages.find(s => s.status === "current");
+  // ถ้ามี stage ที่ rejected = ไม่ผ่านการคัดเลือก
   const rejectedStage = stages.find(s => s.status === "rejected");
-
   if (rejectedStage) {
-    return `ไม่ผ่าน${rejectedStage.name}`;
+    return "ไม่ผ่านการคัดเลือก";
   }
 
+  // ถ้ามี current stage ให้แสดงชื่อ stage นั้น
+  const currentStage = stages.find(s => s.status === "current");
   if (currentStage) {
-    return `${currentStage.name}`;
+    return currentStage.name;
   }
 
+  // ถ้าผ่านทุก stage = ผ่านการคัดเลือก
   const passedStages = stages.filter(s => s.status === "passed");
   if (passedStages.length === stages.length) {
     return "ผ่านการคัดเลือก";
@@ -339,6 +349,7 @@ const getCurrentStage = (stages) => {
   return "รอดำเนินการ";
 };
 
+// ✅ แก้ไข: CSS class สำหรับสถานะ badge
 const getStatusClass = (stages) => {
   const rejectedStage = stages.find(s => s.status === "rejected");
   if (rejectedStage) return "rejected";
@@ -349,13 +360,13 @@ const getStatusClass = (stages) => {
   if (passedStages.length === stages.length) return "completed";
 
   if (currentStage) {
-    const currentIndex = stages.findIndex(s => s.status === "current");
-    if (currentIndex === 0 || currentIndex === 1) return "applying";
-    if (currentIndex === 2) return "interview";
-    if (currentIndex === 3) return "considering";
+    // ใช้ชื่อ stage เป็น class
+    if (currentStage.name === "ตรวจสอบเอกสาร") return "checking";
+    if (currentStage.name === "สัมภาษณ์") return "interview";
+    if (currentStage.name === "รอพิจารณา") return "considering";
   }
 
-  return "applying";
+  return "checking";
 };
 
 const getConnectorClass = (stages, index) => {
@@ -402,7 +413,7 @@ const filteredRecords = computed(() => {
       const from = new Date(dateFrom.value);
       const to = new Date(dateTo.value);
       to.setHours(23, 59, 59, 999);
-      
+
       if (recordDate < from || recordDate > to) {
         return false;
       }
@@ -416,17 +427,42 @@ const filteredRecords = computed(() => {
 });
 
 const parseThaiDate = (dateStr) => {
-  // Format: "01/01/68" (dd/mm/yy)
   const parts = dateStr.split("/");
   const day = parseInt(parts[0]);
   const month = parseInt(parts[1]) - 1;
-  const year = parseInt(parts[2]) + 2500; // แปลง พ.ศ. เป็น ค.ศ.
+  const year = parseInt(parts[2]) + 2500;
   return new Date(year - 543, month, day);
 };
 
-const openPanel = (record) => {
+const openJobPanel = (record) => {
   selectedJob.value = record;
   selectedImageIndex.value = 0;
+};
+
+const openApplicationPanel = (record) => {
+  selectedApplication.value = {
+    jobData: {
+      title: record.jobTitle,
+      company: record.company,
+      department: record.department,
+      logo: record.logo
+    },
+    applicationData: {
+      fullName: mockApplicationData.applicant.fullName,
+      email: mockApplicationData.applicant.email,
+      phone: mockApplicationData.applicant.phone,
+      resumeName: mockApplicationData.documents.resumes[0].name,
+      coverLetterName: mockApplicationData.documents.coverLetterName,
+      transcriptName: mockApplicationData.documents.transcriptName
+    },
+    applicationDate: formatThaiDate(record.applicationDate)
+  };
+  showApplicationPanel.value = true;
+};
+
+const closeApplicationPanel = () => {
+  showApplicationPanel.value = false;
+  selectedApplication.value = null;
 };
 
 const closePanel = () => {
@@ -543,7 +579,8 @@ const closePanel = () => {
   flex-shrink: 0;
 }
 
-.status-badge.applying {
+/* ✅ เพิ่ม: สถานะ "ตรวจสอบเอกสาร" */
+.status-badge.checking {
   background: #dbeafe;
   color: #1e40af;
 }

@@ -73,8 +73,8 @@
         </div>
 
         <h3>เอกสารประกอบการสมัคร</h3>
+        <p class="helper-text">เลือกเอกสารที่ต้องการใช้สมัครงาน</p>
         <div class="section-card">
-          <p class="helper-text">เลือกเรซูเม่ที่ต้องการใช้สมัครงาน</p>
 
           <!-- Resume Selection -->
           <div class="document-section">
@@ -202,7 +202,8 @@
         <div class="section-card confirmation-card">
           <h3>ยืนยันการสมัครงาน</h3>
           <p class="confirmation-text">คุณต้องการยืนยันการสมัครงานตำแหน่ง <strong>{{ jobData.title }}</strong> ที่บริษัท
-            <strong>{{ jobData.company }}</strong> ใช่หรือไม่?</p>
+            <strong>{{ jobData.company }}</strong> ใช่หรือไม่?
+          </p>
 
           <div class="confirmation-notice">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -223,145 +224,9 @@
 
       <!-- Step 3: Application Summary -->
       <div v-if="currentStep === 3" class="step-content">
-        <div class="application-summary-card">
-          <!-- Header with Icon -->
-          <div class="summary-header">
-            <div class="summary-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-            </div>
-            <h2>ใบสมัครงานสำเร็จเรียบร้อยแล้ว</h2>
-            <p class="summary-subtitle">กรุณาตรวจสอบรายละเอียดใบสมัครของคุณ</p>
-          </div>
-
-          <!-- Job Position Section -->
-          <div class="summary-section">
-            <div class="section-header-summary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-              </svg>
-              <h4>ตำแหน่งงานที่สมัคร</h4>
-            </div>
-            <div class="summary-content">
-              <div class="job-position-display">
-                <img :src="jobData.logo" alt="Company Logo" class="job-logo-small" />
-                <div class="job-details-summary">
-                  <h5>{{ jobData.title }}</h5>
-                  <p class="company-detail">{{ jobData.company }}</p>
-                  <span class="department-badge">{{ jobData.department }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Applicant Info Section -->
-          <div class="summary-section">
-            <div class="section-header-summary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              <h4>ข้อมูลผู้สมัคร</h4>
-            </div>
-            <div class="summary-content">
-              <div class="applicant-info-grid">
-                <div class="info-row-summary">
-                  <span class="info-label-summary">ชื่อ-นามสกุล</span>
-                  <span class="info-value-summary">{{ applicationData.fullName }}</span>
-                </div>
-                <div class="info-row-summary">
-                  <span class="info-label-summary">อีเมล</span>
-                  <span class="info-value-summary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                      <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
-                    {{ applicationData.email }}
-                  </span>
-                </div>
-                <div class="info-row-summary">
-                  <span class="info-label-summary">เบอร์โทรศัพท์</span>
-                  <span class="info-value-summary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path
-                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                      </path>
-                    </svg>
-                    {{ applicationData.phone }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Documents Section -->
-          <div class="summary-section">
-            <div class="section-header-summary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                <polyline points="13 2 13 9 20 9"></polyline>
-              </svg>
-              <h4>เอกสารที่แนบมา</h4>
-            </div>
-            <div class="summary-content">
-              <div class="documents-list">
-                <!-- Resume -->
-                <div class="document-item">
-                  <div class="document-icon resume-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                  </div>
-                  <div class="document-info">
-                    <span class="document-type">เรซูเม่ (Resume)</span>
-                    <span class="document-name">{{ applicationData.resumes[selectedResume]?.name }}</span>
-                  </div>
-                </div>
-
-                <!-- Cover Letter (if selected) -->
-                <div v-if="selectedCoverLetter !== null" class="document-item">
-                  <div class="document-icon cover-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                  </div>
-                  <div class="document-info">
-                    <span class="document-type">จดหมายสมัครงาน (Cover Letter)</span>
-                    <span class="document-name">{{ coverLetters[selectedCoverLetter]?.name }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Application Date -->
-          <div class="application-date">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            <span>สมัครเมื่อวันที่ {{ getCurrentDate() }}</span>
-          </div>
-        </div>
+        <ApplicationSummaryCard :job-data="summaryCardData.jobData" :application-data="summaryCardData.applicationData"
+          :application-date="summaryCardData.applicationDate" header-title="ใบสมัครงานสำเร็จเรียบร้อยแล้ว"
+          header-subtitle="กรุณาตรวจสอบรายละเอียดใบสมัครของคุณ" />
 
         <!-- Application Status Timeline -->
         <div class="status-timeline-card">
@@ -369,7 +234,7 @@
             <h3>ขั้นตอนการสมัครงาน</h3>
             <button class="btn-track-status">ตรวจสอบเอกสาร</button>
           </div>
-          
+
           <div class="timeline-container">
             <div class="timeline-wrapper">
               <div v-for="(stage, index) in applicationStages" :key="index" class="timeline-item">
@@ -417,9 +282,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import DashboardLayout from '../../components/DashboardLayout.vue';
+import ApplicationSummaryCard from '../../components/ApplicationSummaryCard.vue';
+import { mockApplicationData, formatThaiDate } from '../../data/applicationData.js';
 
 const router = useRouter();
 const route = useRoute();
@@ -430,7 +297,7 @@ const jobId = ref(route.params.jobId);
 // Current step
 const currentStep = ref(1);
 
-// Job Data (mock - should fetch from API)
+// Job Data
 const jobData = reactive({
   id: jobId.value,
   title: "Frontend Developer (In-tern)",
@@ -441,14 +308,29 @@ const jobData = reactive({
 
 // Application Data
 const applicationData = reactive({
-  fullName: "สมชาย ใจดี",
-  email: "somchai@gmail.com",
-  phone: "0123456789",
-  resumes: [
-    { name: "Somchai_Resume.pdf" },
-    { name: "Somchai_Resume2.pdf" }
-  ]
+  fullName: mockApplicationData.applicant.fullName,
+  email: mockApplicationData.applicant.email,
+  phone: mockApplicationData.applicant.phone,
+  resumes: mockApplicationData.documents.resumes
 });
+
+const summaryCardData = computed(() => ({
+  jobData: {
+    title: jobData.title,
+    company: jobData.company,
+    department: jobData.department,
+    logo: jobData.logo
+  },
+  applicationData: {
+    fullName: applicationData.fullName,
+    email: applicationData.email,
+    phone: applicationData.phone,
+    resumeName: applicationData.resumes[selectedResume.value]?.name || '',
+    coverLetterName: selectedCoverLetter.value !== null ? coverLetters.value[selectedCoverLetter.value]?.name : null,
+    transcriptName: null // เพิ่มถ้ามีการอัปโหลด transcript
+  },
+  applicationDate: getCurrentDate()
+}));
 
 // Selected documents
 const selectedResume = ref(null);
@@ -752,7 +634,8 @@ onMounted(() => {
 .helper-text {
   font-size: 14px;
   color: #777;
-  margin-bottom: 20px;
+  margin-top: -15px;
+  margin-bottom: 15px;
   line-height: 1.6;
 }
 
@@ -809,7 +692,7 @@ onMounted(() => {
 
 /* ========== DOCUMENT SECTION ========== */
 .document-section {
-  margin: 30px 0;
+  margin: 0px 0;
   padding: 25px 0;
   border-bottom: 1px solid #eee;
 }
@@ -1339,7 +1222,7 @@ onMounted(() => {
   flex-shrink: 0;
   background: #dbeafe;
   color: #1e40af;
-  border: none; 
+  border: none;
 }
 
 /* Timeline Container */
@@ -1417,6 +1300,7 @@ onMounted(() => {
 }
 
 @keyframes pulseIndicator {
+
   0%,
   100% {
     box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2), 0 3px 12px rgba(245, 158, 11, 0.3);
@@ -1566,6 +1450,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
